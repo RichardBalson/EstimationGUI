@@ -393,7 +393,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',h,'units','normalized',
 % Callback when Start_Program push button is pressed
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function StartProgram(varargin)
-        DetectorSettings = struct('EEGFilepath',{{0}},'ExcelFilepath',{{0}},'PlotFeatures',0,'LLThres',0,'AmpThres',0,'CompareSeizures',0,'Padding',10,'Channels',0,'SaveData',0);
+        DetectorSettings = struct('EEGFilepath',{{0}},'ExcelFilepath',{{0}},'PlotFeatures',0,'LLThres',0,'AmpThres',0,'CompareSeizures',0,'Padding','10','Channels',0,'SaveData',0);
         EstimatorSettings = struct();
         EstimatorType = [0 0 0];
         ProgramType = [0 0 0];% Index 1 Detector, 2 characterise seizures, 3 characterise background
@@ -482,7 +482,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',h,'units','normalized',
         refreshdata
         ChannelsRequested = get(ChannelChoice,'string');
         if isempty(ChannelsRequested)
-            DetectorSettings.Channels =0;
+            DetectorSettings.Channels ='all';
         else
            DetectorSettings.Channels =ChannelsRequested; 
         end

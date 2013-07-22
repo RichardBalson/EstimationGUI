@@ -35,11 +35,12 @@ Start.AMPM = StartDateTime(end-1:end);
 % Number_of_animals = 7 and ChannelLength is 7x1 vector [4,0,4,0,4,0,4]'
 
 % Check what channels were requested by the user
-if DetectorSettings.Channels ~=0
+if ~strcmp(DetectorSettings.Channels,'all')
     for k =1:ceil(length(DetectorSettings.Channels)/2)
         channel(k) = str2double(DetectorSettings.Channels(1+2*(k-1)));
     end
-else channel=1:8;
+else
+    channel=1:8;
 end
 Channels =[];
 for k = 1:length(channel)
@@ -72,6 +73,7 @@ end
 
 if (ProgramType(2) || EstimatorType(2)) % Seizure Characterisation is specified
     Padding = str2double(DetectorSettings.Padding); % Specify padding used at start and end of seizure
+    Start.Padding = Padding;
     Time_adjustment = Time_adjustment_Days;
     Time_adjustment_Days =0;
     Seizure_time = ReadEEGExcel(DetectorSettings.ExcelFilepath,'Matlab',Number_of_animals,Start.Day,Time_adjustment);
@@ -181,6 +183,9 @@ for k= Channels % Loop through number of animals
             Channel_number = Channel_number+1; % Increase the channel number needed to be analysed
             
             [Data_out dataIn] = Profusion_Ext_Filt_GUI(StartTime, Duration,Decimate, band_coeff,Channel_number,Time_adjustment); % Extract data from profusion, Data_out is filtered and dataIn is not.
+            if DetectorSettings.SaveData
+                save(['Animal',int2str(k),'Seizure',int2str(j),'Channel',int2str(m),'.mat'],'dataIn','Data_out');
+            end
             
             if m ==1 % Check if currently looking at first channel
                 
