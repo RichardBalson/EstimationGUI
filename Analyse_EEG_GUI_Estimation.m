@@ -53,6 +53,8 @@ end
 % Set initial settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if (any(ProgramType) || any(EstimatorType))
+
 % Specify prgram specific settings
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 window_length =1; % Units of seconds, specify the length of windows used for analysis, this setting is generally used for seizure detection
@@ -252,4 +254,27 @@ for k= Channels % Loop through number of animals
         end
     end
 end
+
+elseif DetectorSettings.ProcessData
+    if ProgamType(2)
+        for k = Channels
+            for j = 1:Days 
+                Spreadsheet_Name = ['AnimalNumber ',int2str(k),'_Pad_',int2str(Start.Padding),' SD',int2str(Start.Day),'CD',int2str(Start.Day+j-1),'_',int2str(Start.Month),'_',int2str(Start.Year),Spreadsheet_number]; % Initilaise spreadsheet name
+                if exist([Spreadsheet_name,'.xls'],'file')
+                    ProcessExcelData([Spreadsheet_name,'.xls'],Start);
+                    
+                elseif exist([Spreadsheet_name,'.xlsx'],'file')
+                    ProcessExcelData([Spreadsheet_name,'.xls'],Start);
+                else
+                    continue
+                end
+            end
+        end
+    else
+        Spreadsheet_Name = DetectorSettings.ExcelFilepath;
+        Start.Padding = str2double(DetectorSettings.Padding);
+        ProcessExcelData(Spreadsheet_Name,Start);
+    end
+end
+    
 
