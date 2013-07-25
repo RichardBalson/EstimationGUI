@@ -161,7 +161,7 @@ for k= Channels % Loop through number of animals
     for j = 1:Number_of_windows % Loop through the number of windows in the data
         
         if ((ProgramType(3)) || (ProgramType(1)) || EstimatorType(3)) % Check if all data is being analysed (For Programs 1 and 3)
-            StartTime = (j-1)*interval_duration+1; % Determine start time for current window
+            StartTime = (j-1)*interval_duration; % Determine start time for current window
             Duration = interval_duration; % Specify duration of current window
         else % Check if specified data needs to be analysed (For program 2)
             StartTime = Seizure_time(j,1,k)-Padding; % Determine start time, here it is the seizure start time less the specifed padding

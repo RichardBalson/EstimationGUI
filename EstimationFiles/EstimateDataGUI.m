@@ -1,8 +1,5 @@
-function [X Pxx X_Multi Pxx_Multi] = EstimateDataGUI(Data,fs,Initialise,k)
+function [X Pxx PxxT] = EstimateDataGUI(Data,fs,Initialise,Channel,Start)
 
-if Initialise 
-    load TemporaryInit StateEstimatesT PxxT 
-end
 
 addpath(genpath('../../UKFFinal'));
 
@@ -14,16 +11,14 @@ User_defined_parameters_GUI;
 
 Dx = Ds+Dp+Dk; % Number of dimensions of augmented state matrix, Note that estimated parameters and inputs are now considered to be 'slow states' in the estimation procedure[
 
-Estimation_Type = 'Data';
+Estimation_Type = 'EstimationResults\Data';
 dt = 1/fs;
 
-if filter_simulation
-    band_coeff = filtercoeff(lowcutoff,highcutoff,fs);
-end
 % Data
 % ~~~~~~~~~~~~~~~~
 
 if filter_simulation
+    band_coeff = filtercoeff(lowcutoff,highcutoff,fs);
     Y = filtfilt1(band_coeff,1,Y);
 end
 
@@ -53,13 +48,24 @@ Min = [Min_A, Min_B, Min_G];
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 % ~~~~~~~~~~~
 EstimationVariables_Data_GUI;
-for q = 1:Simulation_number
+
+if Initialise 
+    load TemporaryInit StateEstimatesT PxxT 
+    X(:,1) = StateEstimatesT(:,Channel);
+    Pxx(:,1) = diag(PxxT(:,:,Channel));
+    PxxT = PxxT(:,:,Channel);
+end
+
+% for q = 1:Simulation_number
 init =0;
 condition =1;
+err=0;
 while condition
-    init=init+1
-    conditionT = init<1;
+    init=init+1;
+    conditionT = init<Reinitialise_parameters_attempts;
+    if (Initialise ==0 || err)
     Initialise_parameters_Data;
+    end
     
     %%
     
@@ -67,7 +73,7 @@ while condition
     % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     for p =1:Number_of_observations
-        [Sigma(:,:,p) err] = Unscented_transform(Dx,Pxx(:,:,p),X(:,p),kappa);
+        [Sigma(:,:,p) err] = Unscented_transform(Dx,PxxT,X(:,p),kappa);
         if (err ==1)
             break
         end
@@ -108,42 +114,44 @@ while condition
         %
         Pxxn = Pxxn + Q;
         
-        [X(:,p+1) Pxx(:,:,p+1)] = Kalman(ExpX(:,p), ExpY(:,p), Y(p), Pxxn, Pxyn, Pyyn);
+        [X(:,p+1) PxxT] = Kalman(ExpX(:,p), ExpY(:,p), Y(p), Pxxn, Pxyn, Pyyn);
+        
+        Pxx(:,p+1) = diag(PxxT);
     end
     conditionT1 = ((X(Ds+Dk+1,end) <0) || (X(Ds+Dk+2,end) <0) ||(X(Ds+Dk+3,end) <0));
     condition = ((conditionT && conditionT1) || (err&&init<5));
 end
 
-    if (Simulation_number ~=1)
-        if q ==1
-            X_Multi = zeros(floor(size(X,2)/Decimate)+1,Dp+Dk,Simulation_number);
-            Pxx_Multi = zeros(floor(size(X,2)/Decimate)+1,Dp+Dk,Simulation_number);
-        end
-        X_Multi(:,:,q) = X(Ds+1:Ds+Dp+Dk,1:500:end)';
-        for k =1:Dk+Dp
-            Pxx_Multi(:,k,q) = squeeze(Pxx(k,k,1:500:end));
-        end
-            else 
-        X_Multi =0;
-        Pxx_Multi =0;
-    end
-end % End Simulation_nuumber loop
+%     if (Simulation_number ~=1)
+%         if q ==1
+%             X_Multi = zeros(floor(size(X,2)/Decimate)+1,Dp+Dk,Simulation_number);
+%             Pxx_Multi = zeros(floor(size(X,2)/Decimate)+1,Dp+Dk,Simulation_number);
+%         end
+%         X_Multi(:,:,q) = X(Ds+1:Ds+Dp+Dk,1:500:end)';
+%         for k =1:Dk+Dp
+%             Pxx_Multi(:,k,q) = squeeze(Pxx(k,1:500:end));
+%         end
+%             else 
+%         X_Multi =0;
+%         Pxx_Multi =0;
+%     end
+% end % End Simulation_nuumber loop
 
 Generate_figures_data;
 
 if fig_save
     
-    Figure_handling;
+    Figure_handling_Data;
     
 end
-if Simulation_number>1
-    Generate_figures_multi_data;
-    if fig_save
-        
-        Figure_handling_multi;
-        
-    end
-end
+% if Simulation_number>1
+%     Generate_figures_multi_data;
+%     if fig_save
+%         
+%         Figure_handling_multi_Data;
+%         
+%     end
+% end
 
 %%
 

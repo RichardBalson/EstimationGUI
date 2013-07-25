@@ -84,7 +84,7 @@ Parameter_std_deviationF = repmat(Parameter_std_deviation,Dp,1);% Define a param
 X(1:Ds,1) = Gauss_state; % Intialise all parameters for the state estimate
 
 if Dp >0                                    % Check whether parameters need to be estimated, if so alter storage folder
-    Estimation_type = 'ParameterEstimation'; % Set folder into which images will be sved if they are printed
+%     Estimation_type = 'ParameterEstimation'; % Set folder into which images will be sved if they are printed
     X(Ds+Dk+1,1) = Initial_excitability;     % Set the intial guess for the A to be the initial value specified.
     if Dp >1                                % Check whether more than one parameter needs to be estimated
         X(Ds+Dk+2,1) = Initial_inhibition;    % Set the intial guess for the B to be the initial value specified.
@@ -93,9 +93,11 @@ if Dp >0                                    % Check whether parameters need to b
         end
     end
 else
-    Estimation_type = 'StateEstimation'; %Set folder into which images will be sved if they are printed
+%     Estimation_type = 'StateEstimation'; %Set folder into which images will be sved if they are printed
 end
 
 Parameter_covariance_matrix = eye(Dp).*Parameter_std_deviationF.^2; % State Parameter matrix
 
-Pxx(:,:,1) = blkdiag(State_covariance_matrix,Input_variance,Parameter_covariance_matrix); %Covariance of model states and parameter
+PxxT = blkdiag(State_covariance_matrix,Input_variance,Parameter_covariance_matrix); %Covariance of model states and parameter
+
+Pxx(:,1) = diag(PxxT);

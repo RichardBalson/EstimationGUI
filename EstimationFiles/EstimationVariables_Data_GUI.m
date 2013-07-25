@@ -29,8 +29,10 @@
  
  C= [Con,0.8*Con,0.25*Con,0.25*Con,0.3*Con,0.1*Con,0.8*Con];
  
-    simulation_initial_name = [Estimation_Type,'_UKF_WM8_f=',int2str(sampling_frequency),...
-        'Data']; % Initaite name for simulation, used for saving purposes
+    simulation_initial_name = [Estimation_Type,'_UKFW_f',int2str(sampling_frequency),...
+        'Animal',int2str(Start.Animal),'Ch',int2str(Channel),'ST',int2str(Start.WindowTime),...
+        'D',int2str(Start.WindowDuration),'SD',int2str(Start.Day),...
+        'CD',int2str(Start.CurrentDay),'_',int2str(Start.Month),'_',int2str(Start.Year)]; % Initaite name for simulation, used for saving purposes
 
 % Assign standard deviation for all variables
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,7 +129,7 @@ Parameter_uncertaintyF = repmat(Parameter_uncertainty,Dp,1);% Define a parameter
 tcon =[a,b,g];
 
 X = zeros(Dx,Number_of_observations); % Intialise state estimate matrix
-Pxx = zeros(Dx,Dx,Number_of_observations);% Intialise state covariance estimate matrix
+Pxx = zeros(Dx,Number_of_observations);% Intialise state covariance estimate matrix
 Xout = zeros(Dx,Sigma_points,Number_of_observations); % Intialise output states from the point sin the unscented transform matrix
 Yout = zeros(Dy,Sigma_points,Number_of_observations); % Intialsie the model output for each set of sigm points matrix
 ExpX = zeros(Dx,Number_of_observations);% Intialise athe expected states from the unscented transform matrix
