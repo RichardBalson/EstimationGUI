@@ -63,7 +63,7 @@ end
 % Intialisation of parameters
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-number_of_sigma = 2; % Number of standard deviations from mean. 4 accounts for 99.73 percent of points.
+number_of_sigma = 1; % Number of standard deviations from mean. 4 accounts for 99.73 percent of points.
 
 Reinitialise_parameters_attempts = 1; % Specify number of attempts for parameter reinitialisation if results are not physiologucally possible
 
