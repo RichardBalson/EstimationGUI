@@ -99,7 +99,7 @@ PostprocessString = uicontrol('style','text','parent',GUIFigure,'units','normali
 EEG_data_path = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.03 0.85 0.35 0.04]);
 
 % Provides details of errors that occur, and that the analysis has started
-ErrorMessage = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.3 0.4 0.2],'Visible','off');
+ErrorMessage = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.25 0.4 0.1],'Visible','off');
 
 ChannelChoice = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.5 0.25 0.04]);
 
@@ -329,11 +329,17 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Visible','Off');
             set(PostprocessString,'Visible','Off');
+            set(PaddingString,'Visible','On'); % Specify padding as on
+            set(Padding,'Visible','On'); % Specify padding as on
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             set(Estimate_characterised_seizures,'Value',0)
             set(Estimate_all_data,'Value',0);
+        else
+            set(PaddingString,'Visible','Off'); % Specify padding as on
+            set(Padding,'Visible','Off'); % Specify padding as on
         end
+            
     end
 
     function EstCharCHK(varargin)

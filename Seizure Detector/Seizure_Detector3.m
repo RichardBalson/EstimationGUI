@@ -35,7 +35,6 @@ load Seizure Seizure_init % Load information about seizures from the previous wi
 if (((~isempty(find(Seizure ==1,1))) || (Seizure_init == 1)) && ((~isempty(find(Seizure==0,1)) || (Seizure_init == 0)))) % Determine if a change has occured in the detected seizure status, ie a change from 1 to zero accross windows or any change in variable seizure in current window
     [Seizure_start, Seizure_end, Seizure_ref_time]= Start_end_time(Seizure,Seizure_time,sampling_frequency,Start.Hours,Start.Minutes,Start.Seconds,Window_start_time); % Create a time string for the detected seizure starts and ends
 else % No seizures detected
-    Seizure_ref_time =[];
     Seizure_start=[];
     Seizure_end=[]; % Empty strings for both fields
 end
@@ -145,7 +144,7 @@ if Seizure(end) ==1
     Seizure_end_time_sec(m) = Window_time+Seizure_time(end);
 end
 
-Seizure_ref_time = [Seizure_start_time_sec-Window_time Seizure_end_time_sec-Window_time]; % Specify window normalised seizure start time and duration
+Seizure_ref_time = [Seizure_start_time-Window_time Seizure_end_time-Seizure_start_time-Window_time]; % Specify window normalised seizure start time and duration
 
 if m >0 % Check if a seizure end was detected
     for p =1:m % Loop through number of seizure ends

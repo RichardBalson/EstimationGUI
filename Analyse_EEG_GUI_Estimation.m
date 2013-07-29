@@ -40,7 +40,7 @@ if ~strcmp(DetectorSettings.Channels,'all')
         channel(k) = str2double(DetectorSettings.Channels(1+2*(k-1)));
     end
 else
-    channel=1:8;
+    channel=1:length(ChannelLength);
 end
 Channels =[];
 for k = 1:length(channel)
