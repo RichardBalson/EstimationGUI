@@ -214,7 +214,7 @@ for k= Channels % Loop through number of animals
                     end
                 end
                 if (~isempty(Seizure_end)) % Check if a seizure end was found
-                    Animal(k).SeizureEndT(end+1*(j>1):end+1*(j>1)+length(Seizure_end)-1) = num2cell(Seizure_end');% Write data to animal specific structure structure
+                    Animal(k,inc).SeizureEndT(end+1*(j>1):end+1*(j>1)+length(Seizure_end)-1) = num2cell(Seizure_end');% Write data to animal specific structure structure
                 end
             elseif ProgramType(2) ==1 % Seizure Characterise
                 Analyse_data_characterise(All_Channel_Data,window_length,frequency_bands,fs,k,j,Start,DetectorSettings.PlotFeatures) % Analyse data, results are sent to spreadsheets
