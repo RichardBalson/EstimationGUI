@@ -234,7 +234,7 @@ for k= Channels % Loop through number of animals
     if ProgramType(1) ==1 % Check if seizure detection is selected
         Sheet_name = 'Seizure Start and End'; % Specify sheet name
         for Day = 1:inc
-            Spreadsheet_Name = ['SeizuresDetectedN_AnimalNumber ',int2str(k),' D ',int2str(Start.Day+Day-1),'_',int2str(Start.Month),'_',int2str(Start.Year),'.xls']; % Specify name for spreadsheet
+            Spreadsheet_Name = ['SeizuresDetected_AnimalNumber ',int2str(k),' SD',int2str(Start.Day),'CD',int2str(Start.Day+Day-1),'_',int2str(Start.Month),'_',int2str(Start.Year),'.xls'];  % Specify name for spreadsheet
             xlswrite(Spreadsheet_Name,{'Seizure Start', 'Seizure End'},Sheet_name,'A1'); % Write names for each column
             if length(Animal(k,Day).SeizureStartT)>1 % Check if a seizure was found for the animal of interest
                 a={Animal(k,Day).SeizureStartT{:}; Animal(k,Day).SeizureEndT{:}}'; % Create a cell with all seizure data
