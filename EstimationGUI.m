@@ -91,7 +91,9 @@ AmplitudeString= uicontrol('style','text','parent',GUIFigure,'units','normalized
 
 PaddingString = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.4 0.45 0.25 0.04],'string','Padding for annotations (10)','Visible','off');
 
-PostprocessString = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.03 0.55 0.35 0.04],'string','Characterised seizures Excel file','Visible','off');
+% SeizureSplit = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.03 0.55 0.35 0.04],'string','Split Seizure','Visible','off');
+
+% PostprocessString = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.03 0.55 0.35 0.04],'string','Characterised seizures Excel file','Visible','off');
 % Edit boxes
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -99,7 +101,7 @@ PostprocessString = uicontrol('style','text','parent',GUIFigure,'units','normali
 EEG_data_path = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.03 0.85 0.35 0.04]);
 
 % Provides details of errors that occur, and that the analysis has started
-ErrorMessage = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.25 0.4 0.1],'Visible','off');
+ErrorMessage = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.3 0.4 0.2],'Visible','off');
 
 ChannelChoice = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.5 0.25 0.04]);
 
@@ -190,7 +192,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Save_data,'Value',0);
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Value',0,'Visible','off');
-            set(PostprocessString,'Visible','Off');
+%             set(PostprocessString,'Visible','Off');
             set(Seizure_Characterise,'Value',0) % Uncheck Seizure Characterise
             set(Characterise_all_data,'Value',0) % Uncheck Characterise all data
             set(EEGSort,'Visible','Off') % Turn off EEG sort filepath text
@@ -244,7 +246,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Compare_Seizures,'Value',0);
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Visible','On');
-            set(PostprocessString,'Visible','Off');
+%             set(PostprocessString,'Visible','Off');
             % Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             set(Estimate_all_data,'Value',0);
@@ -295,7 +297,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Compare_Seizures,'Value',0);
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Visible','Off');
-            set(PostprocessString,'Visible','Off');
+%             set(PostprocessString,'Visible','Off');
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             set(Estimate_characterised_seizures,'Value',0);
@@ -328,7 +330,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Save_data,'Value',0);
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Visible','Off');
-            set(PostprocessString,'Visible','Off');
+%             set(PostprocessString,'Visible','Off');
             set(PaddingString,'Visible','On'); % Specify padding as on
             set(Padding,'Visible','On'); % Specify padding as on
             %Estimator
@@ -362,7 +364,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Save_data,'Visible','On') % Turn off plot features check box
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Visible','On');
-            set(PostprocessString,'Visible','Off');
+%             set(PostprocessString,'Visible','Off');
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~
             set(Estimate_detected_seizures,'Value',0);
@@ -403,7 +405,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Save_data,'Value',0);
             set(Post_process_characterise,'Value',0);
             set(Post_process_annotate,'Visible','Off');
-            set(PostprocessString,'Visible','Off');
+%             set(PostprocessString,'Visible','Off');
         end
     end
 
@@ -412,14 +414,14 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Post_process_characterise,'Value')
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            set(PostprocessString,'Visible','On');
+%             set(PostprocessString,'Visible','On');
             set(EEGSort,'Visible','off');
             set(PaddingString,'Visible','On'); % Specify padding as on
             set(Padding,'Visible','On'); % Specify padding as on
             set(Seizure_Characterise,'Value',0) % Uncheck Seizure Characterise
-            set(EEG_Seizure_times_data_path,'Visible','On')% Turn on EEG sort filepath edit box
+%             set(EEG_Seizure_times_data_path,'Visible','On')% Turn on EEG sort filepath edit box
             set(Seizure_Detection,'Value',0) % Uncheck Seizure Detection
-            set(Browse_Annotate_EEG,'Visible','On') % Turn on browse EEG anotate file push button
+%             set(Browse_Annotate_EEG,'Visible','On') % Turn on browse EEG anotate file push button
             set(Characterise_all_data,'Value',0) % Uncheck Characterise all data
             set(Save_data,'Visible','Off') % Turn off plot features check box
             set(Plot_features,'Visible','Off','Value',0) % Turn on plot features check box
