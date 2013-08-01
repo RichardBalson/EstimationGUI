@@ -109,8 +109,8 @@ function [Seizure_start, Seizure_end Seizure_ref_time]= Start_end_time(Seizure,S
 % given the study starttime and the binary seizure matrix and its
 % corresponding times
 
-Seizure_start ={0}; % Initialise a zero matrix
-Seizure_end ={0};
+Seizure_start =[]; % Initialise a zero matrix
+Seizure_end =[];
 
 Window_time = (Hours*60+minutes)*60+seconds + Window_start_time; % Determine the time that the current data starts at
 load Seizure Seizure_init % load previous information about seizures in the last analysed data window
