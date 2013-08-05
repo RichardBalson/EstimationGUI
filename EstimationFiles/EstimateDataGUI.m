@@ -24,7 +24,6 @@ end
 
 if Normalise_data
     Y = (Y-mean(Y))/std(Y);
-    Y = Y*Max_sim_voltage/max(Y);
 end
 
 % Physiological range of Model gains
@@ -50,10 +49,15 @@ Min = [Min_A, Min_B, Min_G];
 EstimationVariables_Data_GUI;
 
 if Initialise 
-    load TemporaryInit StateEstimatesT PxxT 
+    load TemporaryInit StateEstimatesT PxxT Scale
     X(:,1) = StateEstimatesT(:,Channel);
     Pxx(:,1) = diag(PxxT(:,:,Channel));
     PxxT = PxxT(:,:,Channel);
+    load DataScale Scale
+    Y = Y*Scale;
+else
+    [Y Scale] =  Normalise(Y,Max_sim_voltage,fs,10); 
+    save DataScale Scale
 end
 
 % for q = 1:Simulation_number
