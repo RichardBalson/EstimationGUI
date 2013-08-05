@@ -18,7 +18,7 @@ close all
 % GUI variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-addpath(genpath('..\EstimationGUI'));
+addpath(genpath('pwd'));
 
 Option1=1;
 Option2=1;
