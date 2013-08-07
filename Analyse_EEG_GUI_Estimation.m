@@ -36,19 +36,29 @@ Start.AMPM = StartDateTime(end-1:end);
 
 % Check what channels were requested by the user
 if ~strcmp(DetectorSettings.Channels,'all')
+    Channel_Select=1;
     for k =1:ceil(length(DetectorSettings.Channels)/2)
-        channel(k) = str2double(DetectorSettings.Channels(1+2*(k-1)));
+        ChannelT(k) = str2double(DetectorSettings.Channels(1+2*(k-1)));
     end
 else
-    channel=1:length(ChannelLength);
-end
-Channels =[];
-for k = 1:length(channel)
-    if ChannelLength(channel(k)) ~=0;
-        Channels =cat(2,Channels,channel(k));
-    end
+    Channel_Select=0;
+    ChannelT= ChannelLength; 
 end
 
+
+if ~strcmp(DetectorSettings.Animals,'all')
+    for k =1:ceil(length(DetectorSettings.Animals)/2)
+        AnimalT(k) = str2double(DetectorSettings.Animals(1+2*(k-1)));
+    end
+else
+    AnimalT=1:Number_of_animals;
+end
+AnimalN =[];
+for k = 1:length(AnimalT)
+    if ChannelLength(AnimalT(k)) ~=0;
+        AnimalN =cat(2,AnimalN,AnimalT(k));
+    end
+end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set initial settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,6 +69,7 @@ if (any(ProgramType) || any(EstimatorType))
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 window_length =1; % Units of seconds, specify the length of windows used for analysis, this setting is generally used for seizure detection
 if ProgramType(1) ==1 % Seizure Detection is specified
+    Start.minSeizureD = str2num(DetectorSettings.MinSeizure);
     LLthreshold =str2num(DetectorSettings.LLThres); % Get Line length threshold
     Ampthreshold =str2num(DetectorSettings.AmpThres); % Get amplitude threshold
     window_length =5; % Units of seconds, specify the length of windows used for analysis, this setting is generally used for seizure detection
@@ -130,23 +141,28 @@ band_coeff = filtercoeff(lowcutoff,highcutoff,fs);
 
 % Create a structure to store seizure detection data
 Animal=repmat(struct('SeizureStartT',{{'0'}},'SeizureEndT',{{'0'}}),Number_of_animals,1);
-
+Channel_numberT = cumsum(ChannelLength);
 for k= Channels % Loop through number of animals
     
     if ProgramType(1)==1 % Check if program type is Seizure Detection
-        Seizure_init =0; % Intialise seizure status
-        save Seizure Seizure_init % save Seizure_init for later use
-        Excel_pos = [0 0]; % Intial position in excel file
-        save Current_Excel_pos Excel_pos % save Excel_pos for later use
-        Line_mean = zeros(round(ChannelLength(k)),Number_of_animals); % Intialise mean of line length for all animals
-        Mean_number =0; % Intilaise a count of the number of windows that have passed
-        Amp_mean =zeros(round(ChannelLength(k)),Number_of_animals); % Intiliase mean of amplitude for all animals
-        save Features Line_mean Amp_mean Mean_number % save all features for later use
-        clear Seizure_init Excel_pos Previous_mean Amp_mean % clear all variables as they are no longer required in this function
+            Seizure_init =0; % Intialise seizure status
+            save Seizure Seizure_init % save Seizure_init for later use
+            Excel_pos = [0 0]; % Intial position in excel file
+            save Current_Excel_pos Excel_pos % save Excel_pos for later use
+            if ~Channel_Select
+            Line_mean = zeros(round(ChannelLength(k)),Number_of_animals); % Intialise mean of line length for all animals        
+            Amp_mean =zeros(round(ChannelLength(k)),Number_of_animals); % Intiliase mean of amplitude for all animals
+            else
+                Line_mean = zeros(length(ChannelT),Number_of_animals);
+                Amp_mean = zeros(length(ChannelT),Number_of_animals);
+            end
+                Mean_number =0; % Intilaise a count of the number of windows that have passed
+            save Features Line_mean Amp_mean Mean_number % save all features for later use
+            clear Seizure_init Excel_pos Previous_mean Amp_mean % clear all variables as they are no longer required in this function
     end
     
     if k>1 % Check if the loop is above 1
-        Channel_number_base = Channel_number_base+ChannelLength(k-1); % Specify new channel numbers to look at for each animal
+        Channel_number_base = Channel_numberT(k-1); % Specify new channel numbers to look at for each animal
         % This indicaes the number of channels that have been analysed for
         % all previous cages, excluding the current cage
     end
@@ -178,13 +194,18 @@ for k= Channels % Loop through number of animals
         
         Channel_number= Channel_number_base; % Return channel number to original base for each new window for specifed animal
         
-        for m = 1:round(ChannelLength(k)) % Loop through number of channels for each animal
+            if Channel_Select
+                ChannelSelect = ChannelT;
+            else
+                ChannelSelect = 1:round(ChannelLength(k));
+            end
+            for m = ChannelSelect % Loop through number of channels for each animal
             
             clear Data_out dataIn % Clear variables containing current animal, channel and window data
             
-            Channel_number = Channel_number+1; % Increase the channel number needed to be analysed
+            Channel_numberT = Channel_number+m; % Increase the channel number needed to be analysed
             
-            [Data_out dataIn] = Profusion_Ext_Filt_GUI(StartTime, Duration,Decimate, band_coeff,Channel_number,Time_adjustment); % Extract data from profusion, Data_out is filtered and dataIn is not.
+            [Data_out dataIn] = Profusion_Ext_Filt_GUI(StartTime, Duration,Decimate, band_coeff,Channel_numberT,Time_adjustment); % Extract data from profusion, Data_out is filtered and dataIn is not.
             if DetectorSettings.SaveData
                 save(['Animal',int2str(k),'Seizure',int2str(j),'Channel',int2str(m),'.mat'],'dataIn','Data_out');
             end
