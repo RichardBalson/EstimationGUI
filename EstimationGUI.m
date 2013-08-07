@@ -32,11 +32,10 @@ Option2=1;
 % Detector GUI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-InitialiseDetectorGUI;
-
 global GUIFigure;
 GUIFigure = figure('Name','Estimation GUI');
 
+%%
 
 % Check boxes
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,9 +70,9 @@ Select_Channels = uicontrol('style','checkbox','parent',GUIFigure,'units','norma
 
 Select_Seizure_Duration = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.7 0.8 0.29 0.04],'string','Specify Minimum seizure duration','Visible','off','Callback',@SpecifyDuration);
 
-Process_annotations = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.7 0.9 0.29 0.04],'string','Specify Minimum seizure duration','Visible','off','Callback',@SpecifyDuration);
+Process_annotations = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.7 0.9 0.29 0.04],'string','Process Characterised Excel Files in Current Folder','Visible','off','Callback',@ProcessCharacterise);
 
-Process_Seizures = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.7 0.9 0.29 0.04],'string','Specify Minimum seizure duration','Visible','off','Callback',@SpecifyDuration);
+Process_Seizures = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.7 0.85 0.29 0.04],'string','Compare Detected seizures to annotated Seizures','Visible','off','Callback',@CompareDetect);
 
 
 % Text
@@ -153,6 +152,7 @@ Browse_EEG_file=uicontrol('style','pushbutton','parent',GUIFigure,'units','norma
 % Conditional pushbutton
 % ~~~~~~~~~~~~~~~~~~
 Browse_Annotate_EEG=uicontrol('style','pushbutton','parent',GUIFigure,'units','normalized','position',[0.03 0.5 0.15 0.04],'string','Browse','callback',@BrowseAnnotate,'Visible','off');
+%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,6 +173,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 
 
 % Callback function for folder designation
@@ -203,6 +204,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~`
             set(Select_Seizure_Duration,'Visible','On'); % Turn on option to select seizure duration
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(Select_Channels,'Visible','On'); % Put select channel option on
             set(PaddingString,'Visible','Off'); % Specify padding as off
             set(Padding,'Visible','Off'); % Specify padding as off
@@ -256,6 +259,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Seizure_Characterise,'Value') % Determine if box checked or unchecked
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(Select_Seizure_Duration,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(DurationText,'Visible','Off'); % Turn off duration text
             set(SeizureDuration,'Visible','Off') % Turn off seizure duration edit box
@@ -310,6 +315,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Characterise_all_data,'Value') ==1 % Determine if box checked or unchecked
             % Detector
             %~~~~~~~~~~~~~~~~~~~~
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(Select_Seizure_Duration,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(DurationText,'Visible','Off'); % Turn off duration text
             set(SeizureDuration,'Visible','Off') % Turn off seizure duration edit box
@@ -350,6 +357,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Estimate_detected_seizures,'Value') % Determine if checkbox is checked
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(Select_Seizure_Duration,'Visible','On'); % Turn on option to select seizure duration
             set(Select_Channels,'Visible','On'); % Put select channel option on
             set(LineLengthString,'Visible','On'); % Turn on line length threshold text
@@ -389,6 +398,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Estimate_characterised_seizures,'Value')
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(Select_Seizure_Duration,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(DurationText,'Visible','Off'); % Turn off duration text
             set(SeizureDuration,'Visible','Off') % Turn off seizure duration edit box
@@ -432,6 +443,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 
     function EstDataCHK(varargin)
         if get(Estimate_all_data,'Value')
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(Select_Seizure_Duration,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(DurationText,'Visible','Off'); % Turn off duration text
             set(SeizureDuration,'Visible','Off') % Turn off seizure duration edit box
@@ -469,6 +482,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~
             %             set(PostprocessString,'Visible','On');
+            set(Process_annotations,'Visible','On'); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','On'); % Turn on option to select seizure duration
             set(Select_Seizure_Duration,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(DurationText,'Visible','Off'); % Turn off duration text
             set(SeizureDuration,'Visible','Off') % Turn off seizure duration edit box
@@ -497,6 +512,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Estimate_characterised_seizures,'Value',0)
             set(Estimate_all_data,'Value',0);
         else
+            set(Process_annotations,'Visible','Off','Value',0); % Turn on option to select seizure duration
+            set(Process_Seizures,'Visible','Off','Value',0); % Turn on option to select seizure duration
             set(PaddingString,'Visible','Off'); % Specify padding as on
             set(Padding,'Visible','Off'); % Specify padding as on
             set(EEG_Seizure_times_data_path,'Visible','Off')% Turn on EEG sort filepath edit box
@@ -504,6 +521,36 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 %             set(PostprocessString,'Visible','Off');
         end
     end
+
+    function ProcessCharacterise(varargin)
+        if get(Process_annotations,'Value')
+            set(Process_Seizures,'Value',0)
+            set(PaddingString,'Visible','On'); % Specify padding as on
+            set(Padding,'Visible','On'); % Specify padding as on
+            set(Browse_Annotate_EEG,'Visible','Off') % Turn on browse EEG anotate file push button
+            set(EEG_Seizure_times_data_path,'Visible','Off')% Turn on EEG sort filepath edit box
+            set(EEGSort,'Visible','Off') % Turn on EEG sort filepath text            
+        else
+            set(PaddingString,'Visible','Off'); % Specify padding as on
+            set(Padding,'Visible','Off'); % Specify padding as on
+        end
+    end
+
+function CompareDetect(varargin)
+        if get(Process_Seizures,'Value')
+            set(Process_annotations,'Value',0)
+            set(Browse_Annotate_EEG,'Visible','On') % Turn on browse EEG anotate file push button
+            set(EEG_Seizure_times_data_path,'Visible','On')% Turn on EEG sort filepath edit box
+            set(EEGSort,'Visible','On') % Turn on EEG sort filepath text
+            set(PaddingString,'Visible','Off'); % Specify padding as on
+            set(Padding,'Visible','Off'); % Specify padding as on
+        else
+            set(Browse_Annotate_EEG,'Visible','Off') % Turn on browse EEG anotate file push button
+            set(EEG_Seizure_times_data_path,'Visible','Off')% Turn on EEG sort filepath edit box
+            set(EEGSort,'Visible','Off') % Turn on EEG sort filepath text
+        end
+    end
+%%
 
 % Callback when Compare_Seizures is checked
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -541,6 +588,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         end
     end
 
+%%
 
 % Callback when Start_Program push button is pressed
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
