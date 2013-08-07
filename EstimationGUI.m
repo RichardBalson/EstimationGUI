@@ -518,7 +518,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Padding,'Visible','Off'); % Specify padding as on
             set(EEG_Seizure_times_data_path,'Visible','Off')% Turn on EEG sort filepath edit box
             set(Browse_Annotate_EEG,'Visible','Off') % Turn on browse EEG anotate file push button
-%             set(PostprocessString,'Visible','Off');
+            %             set(PostprocessString,'Visible','Off');
         end
     end
 
@@ -529,14 +529,14 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             set(Padding,'Visible','On'); % Specify padding as on
             set(Browse_Annotate_EEG,'Visible','Off') % Turn on browse EEG anotate file push button
             set(EEG_Seizure_times_data_path,'Visible','Off')% Turn on EEG sort filepath edit box
-            set(EEGSort,'Visible','Off') % Turn on EEG sort filepath text            
+            set(EEGSort,'Visible','Off') % Turn on EEG sort filepath text
         else
             set(PaddingString,'Visible','Off'); % Specify padding as on
             set(Padding,'Visible','Off'); % Specify padding as on
         end
     end
 
-function CompareDetect(varargin)
+    function CompareDetect(varargin)
         if get(Process_Seizures,'Value')
             set(Process_annotations,'Value',0)
             set(Browse_Annotate_EEG,'Visible','On') % Turn on browse EEG anotate file push button
@@ -593,7 +593,8 @@ function CompareDetect(varargin)
 % Callback when Start_Program push button is pressed
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function StartProgram(varargin)
-        DetectorSettings = struct('EEGFilepath',{{0}},'ExcelFilepath',{{0}},'PlotFeatures',0,'LLThres',0,'AmpThres',0,'CompareSeizures',0,'Padding','10','Animals',0,'SaveData',0,'ProcessData',0,'MinSeizure','0','Channels','all');
+        DetectorSettings = struct('EEGFilepath',{{0}},'ExcelFilepath',{{0}},'PlotFeatures',0,'LLThres',0,'AmpThres',0,'CompareSeizures',0,...
+            'Padding','10','Animals',0,'SaveData',0,'ProcessAnnotated',0,'CompareS',0,'MinSeizure','0','Channels','all');
         EstimatorSettings = struct();
         EstimatorType = [0 0 0];
         ProgramType = [0 0 0];% Index 1 Detector, 2 characterise seizures, 3 characterise background
@@ -666,7 +667,7 @@ function CompareDetect(varargin)
             DetectorSettings.PlotFeatures = get(Plot_features,'Value'); % Update detector settings with plot features
             Excel_data_filepath =  get(EEG_Seizure_times_data_path,'string'); % Get excel filepath from edit box
             DetectorSettings.SaveData = get(Save_data,'Value');
-            DetectorSettings.ProcessData = get(Post_process_annotate,'Value');
+            DetectorSettings.ProcessAnnotated = get(Post_process_annotate,'Value');
             if isempty(Excel_data_filepath)% Check if excel filepath exists
                 set(ErrorMessage,'string','No excel filepath specified') % Set error message
                 set(ErrorMessage,'Visible','On') % Show error message
@@ -690,48 +691,58 @@ function CompareDetect(varargin)
             end
             ProgramType = [0 0 1]; % Set program type to characterise all data
         elseif get(Post_process_characterise,'Value')
-            DetectorSettings.ProcessData=1;
-            if isempty(Excel_data_filepath)% Check if excel filepath exists
-                set(ErrorMessage,'string','No excel filepath specified') % Set error message
+            if get(Process_annotations,'Value')
+                PaddingStr = get(Padding,'string');
+                if ~isempty(PaddingStr)
+                    DetectorSettings.Padding = PaddingStr;
+                end
+                DetectorSettings.ProcessAnnotated =1;
+            elseif get(Process_Seizures,'Value')
+                Excel_data_filepath =  get(EEG_Seizure_times_data_path,'string'); % Get excel filepath from edit box
+                if isempty(Excel_data_filepath)% Check if excel filepath exists
+                    set(ErrorMessage,'string','No excel filepath specified') % Set error message
+                    set(ErrorMessage,'Visible','On') % Show error message
+                    return % End callback
+                else
+                    DetectorSettings.ExcelFilepath = Excel_data_filepath; % Set filepath for excel file in detector settings
+                end % Check if no options selected
+                DetectorSettings.CompareS=1;
+            else
+                Option1=0;
+            end
+        end
+            
+            if get(Estimate_characterised_seizures,'Value')
+                EstimatorType = [0 1 0];
+                DetectorSettings.ProcessAnnotated = get(Post_process_annotate,'Value');
+            elseif get(Estimate_all_data,'Value')
+                if get(Select_Channels,'Value')
+                    ChannelsRequested = get(Channel,'string');
+                    if isempty(ChannelsRequested)
+                        DetectorSettings.Channels ='all';
+                    else
+                        DetectorSettings.Channels =ChannelsRequested;
+                    end
+                end
+                EstimatorType=[0 0 1];
+            else
+                Option2 =0;
+            end
+            if ~(Option1 ||Option2)
+                set(ErrorMessage,'string','No option selected') % Set error message
                 set(ErrorMessage,'Visible','On') % Show error message
                 return % End callback
-            else
-                DetectorSettings.ExcelFilepath = Excel_data_filepath; % Set filepath for excel file in detector settings
-            end % Check if no options selected
-        else
-            Option1=0;
-        end
-        if get(Estimate_characterised_seizures,'Value')
-            EstimatorType = [0 1 0];
-            DetectorSettings.ProcessData = get(Post_process_annotate,'Value');
-        elseif get(Estimate_all_data,'Value')
-            if get(Select_Channels,'Value')
-                ChannelsRequested = get(Channel,'string');
-                if isempty(ChannelsRequested)
-                    DetectorSettings.Channels ='all';
-                else
-                    DetectorSettings.Channels =ChannelsRequested;
-                end
             end
-            EstimatorType=[0 0 1];
-        else
-            Option2 =0;
+            refreshdata
+            ChannelsRequested = get(ChannelChoice,'string');
+            if isempty(ChannelsRequested)
+                DetectorSettings.Animals ='all';
+            else
+                DetectorSettings.Animals =ChannelsRequested;
+            end
+            Analyse_EEG_GUI_Estimation(DetectorSettings,EstimatorSettings,ProgramType, EstimatorType); % Begin analysis of data
+            set(ErrorMessage,'string','Analysis Finished') % Inform user that analysis is finished
         end
-        if ~(Option1 ||Option2)
-            set(ErrorMessage,'string','No option selected') % Set error message
-            set(ErrorMessage,'Visible','On') % Show error message
-            return % End callback
-        end
-        refreshdata
-        ChannelsRequested = get(ChannelChoice,'string');
-        if isempty(ChannelsRequested)
-            DetectorSettings.Animals ='all';
-        else
-            DetectorSettings.Animals =ChannelsRequested;
-        end
-        Analyse_EEG_GUI_Estimation(DetectorSettings,EstimatorSettings,ProgramType, EstimatorType); % Begin analysis of data
-        set(ErrorMessage,'string','Analysis Finished') % Inform user that analysis is finished
     end
-end
 
 
