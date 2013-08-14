@@ -1,4 +1,4 @@
-function ProcessData(ExcelSheets,Start)
+function ProcessData(ExcelSheets,Start,Epochs)
 % Created by Richard Balson 23/07/2013
 % This function Processes data from aan excel file that has the data for
 % characterised seizures
@@ -7,7 +7,6 @@ function ProcessData(ExcelSheets,Start)
 % Add code to wriute split seizure data to excel file, and make a user
 % input to specify epochs
 
-Epochs =4;
 for Sheet =1:length(ExcelSheets)
     [~,Sheetnames] = xlsfinfo(ExcelSheets(Sheet).name); % Find out details for specified worksheet
     for k = 1:length(Sheetnames)
@@ -26,7 +25,9 @@ for Sheet =1:length(ExcelSheets)
             PaddingIndex = Start.Padding/DeltaT;
             SeizureIndex = size(Data,1) - PaddingIndex;
             for  j=1:Channels
+                if Epochs>1
                 SeizureSplit(Seizure_number,j,:,:,:) = CreateMat(Data,Epochs,PaddingIndex,SeizureIndex,[AmplitudeInd(j) ZeroInd(j) LLInd(j)]);
+                end
                 Padding(Seizure_number,j,:,:) = CreateMat(Data,1,1,PaddingIndex,[AmplitudeInd(j) ZeroInd(j) LLInd(j)]);% 1ST DIMENSION AMPLITUDE, 2ND ZERO CROSSINGS 3RD LINE LENGTH, 4th mean, min, max, std
                 Seizure(Seizure_number,j,:,:) = CreateMat(Data,1,PaddingIndex+1,SeizureIndex,[AmplitudeInd(j) ZeroInd(j) LLInd(j)]);
                 PaddingEnd(Seizure_number,j,:,:) = CreateMat(Data,1,SeizureIndex+1,size(Data,1),[AmplitudeInd(j) ZeroInd(j) LLInd(j)]);
@@ -93,6 +94,15 @@ for k =1:size(DataExcel,4)
         xlswrite(Spreadsheet_Name_Raw,DataExcel(:,:,j,k),Sheet_names{Index},'B3');
     end
 end
+
+% if Epochs >1
+%     for k =1:Epochs
+% DataExcel =     
+    
+    
+    
+    
+% end
 
 function MeanMinMax = CreateMat(Data,Epochs,Index1,Index2,Indices)
 

@@ -203,9 +203,9 @@ if (any(ProgramType) || any(EstimatorType))
                 
                 clear Data_out dataIn % Clear variables containing current animal, channel and window data
                 
-                Channel_numberT = Channel_number+m; % Increase the channel number needed to be analysed
+                Channel_numberTemp = Channel_number+m; % Increase the channel number needed to be analysed
                 
-                [Data_out dataIn] = Profusion_Ext_Filt_GUI(StartTime, Duration,Decimate, band_coeff,Channel_numberT,Time_adjustment); % Extract data from profusion, Data_out is filtered and dataIn is not.
+                [Data_out dataIn] = Profusion_Ext_Filt_GUI(StartTime, Duration,Decimate, band_coeff,Channel_numberTemp,Time_adjustment); % Extract data from profusion, Data_out is filtered and dataIn is not.
                 if DetectorSettings.SaveData
                     save(['Animal',int2str(k),'Seizure',int2str(j),'Channel',int2str(m),'.mat'],'dataIn','Data_out');
                 end
@@ -277,13 +277,14 @@ if (any(ProgramType) || any(EstimatorType))
     end
 end
 
-if DetectorSettings.ProcessAnnotations
+if DetectorSettings.ProcessAnnotated
+    Epochs = str2num(DetectorSettings.SplitSeizure);
     if ProgramType(2)==1
         for k = AnimalN
             Directory = dir(['AnimalNumber ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
             if ~isempty(Directory)
                 Directory(1).Animal=k;
-                ProcessData(Directory,Start);
+                ProcessData(Directory,Start,Epochs);
             end
         end
     else
@@ -291,7 +292,7 @@ if DetectorSettings.ProcessAnnotations
             Directory = dir(['AnimalNumber ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
             if ~isempty(Directory)
                 Directory(1:end).Animal=k;
-                ProcessData(Directory,Start);
+                ProcessData(Directory,Start,Epochs);
             end
         end
     end
