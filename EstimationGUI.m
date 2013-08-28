@@ -37,9 +37,6 @@ GUIFigure = figure('Name','Estimation GUI');
 
 %%
 
-% Check boxes
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 % Seizure detection analysis
 Seizure_Detection= uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.4 0.9 0.28 0.04],'string','Seizure Detection','callback',@DetectCHK);
 
@@ -50,6 +47,8 @@ Seizure_Characterise =uicontrol('style','checkbox','parent',GUIFigure,'units','n
 Characterise_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.4 0.8 0.28 0.04],'string','Characterise Data','callback',@BackgCHK);
 
 Post_process_characterise = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.4 0.6 0.28 0.04],'string','Process Characterised Data','callback',@ProcessData);
+
+Batch_process = uicontrol('style','checkbox','parent',GUIFigure,'units','normalized','position',[0.03 0.1 0.29 0.04],'string','Process Multiple Files','Visible','on','callback',@Batch);
 
 % Conditional Check boxes
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -156,6 +155,8 @@ Browse_EEG_file=uicontrol('style','pushbutton','parent',GUIFigure,'units','norma
 % Conditional pushbutton
 % ~~~~~~~~~~~~~~~~~~
 Browse_Annotate_EEG=uicontrol('style','pushbutton','parent',GUIFigure,'units','normalized','position',[0.03 0.5 0.15 0.04],'string','Browse','callback',@BrowseAnnotate,'Visible','off');
+
+Clear_batch_list=uicontrol('style','pushbutton','parent',GUIFigure,'units','normalized','position',[0.03 0.15 0.15 0.04],'string','Clear batch list','callback',@ClearList,'Visible','off');
 %%
 
 
@@ -183,18 +184,68 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 % Callback function for folder designation
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+    function Batch(varargin)
+        if get(Batch_process,'Value')
+           set(Clear_batch_list,'visible','on');
+        else
+            set(Clear_batch_list,'visible','off');
+        end
+    end
 % Callback when Seizure_Detection is checked
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     function BrowseEEG(varargin)
-        EEG_file_path = uigetdir;
-        set(EEG_data_path,'string',EEG_file_path)
+        EEG = guidata(GUIFigure);
+        k=0;
+        EEG_files ={};
+        EEG_file_path =1;
+        if get(Batch_process,'value')
+            while EEG_file_path ~=0
+                if k>0
+                    EEG_files{k} = {EEG_file_path};
+                end
+                k= k+1;
+                EEG_file_path = uigetdir;
+            end
+            set(EEG_data_path,'string',EEG_files{k-1})
+        else
+            EEG_file_path = uigetdir;
+            if EEG_file_path ~=0
+                EEG_files ={EEG_file_path};
+                set(EEG_data_path,'string',EEG_files)
+            end
+        end
+        EEG.Data = EEG_files;
+        guidata(EEG_data_path,EEG);
     end
 
     function BrowseAnnotate(varargin)
-        [EEG_annotate_file path] = uigetfile('.xlsx');
-        set(EEG_Seizure_times_data_path,'string',strcat(path,EEG_annotate_file))
+        EEG = guidata(GUIFigure);
+        k=0;
+        EEG_Annotate_files ={};
+        EEG_Annotate_file_path =1;
+        if get(Batch_process,'value')
+            while EEG_Annotate_file_path ~=0
+                if k>0
+                    EEG_Annotate_files{k} = {strcat(pathT,EEG_Annotate_file_path)};
+                end
+                k= k+1;
+                [EEG_Annotate_file_path pathT] = uigetfile('.xlsx');
+            end
+            set(EEG_Seizure_times_data_path,'string',EEG_Annotate_files{k-1})
+        else
+            [EEG_Annotate_file_path pathT] = uigetfile('.xlsx');
+            if EEG_Annotate_file_path ~=0
+                EEG_Annotate_files = {strcat(pathT,EEG_Annotate_file_path)};
+                set(EEG_Seizure_times_data_path,'string',EEG_Annotate_files)
+            end
+        end
+        EEG.Annotate = EEG_Annotate_files;
+        guidata(EEG_data_path,EEG);
+    end
+
+    function ClearList(varargin)
+        guidata(GUIFigure,[]);
     end
 
 
@@ -208,31 +259,31 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~`
             setVisInvis([Select_Seizure_Duration,Select_Channels,Compare_Seizures,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Visible
-                        [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
-                        [Process_Seizures,Plot_features,Save_data,Post_process_annotate,Process_annotations,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Characterise,Post_process_characterise,Characterise_all_data]);% Value 0
-                  
+                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [Process_Seizures,Plot_features,Save_data,Post_process_annotate,Process_annotations,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Characterise,Post_process_characterise,Characterise_all_data]);% Value 0
+            
             % Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_characterised_seizures,Estimate_all_data,Estimate_characterised_seizures]);% Value 0
-
-
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_characterised_seizures,Estimate_all_data,Estimate_characterised_seizures]);% Value 0
+            
+            
         else % Seizure)Detection unchecked
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis(0,...%Visible
-                        [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
-                        [Select_Seizure_Duration,Select_Channels,Compare_Seizures],...% Invisible+Value 0
-                        0);% Value 0
+                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
+                [Select_Seizure_Duration,Select_Channels,Compare_Seizures],...% Invisible+Value 0
+                0);% Value 0
             % Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_detected_seizures]);% Value 0
+            setVisInvis([0],...%Visible
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_detected_seizures]);% Value 0
         end
     end
 
@@ -243,28 +294,28 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([PaddingString,Padding,EEGSort,EEG_Seizure_times_data_path,Save_data,Browse_Annotate_EEG,Plot_features,Post_process_annotate],...%Visible
-                        [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
-                        [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Compare_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Detection,Characterise_all_data,Post_process_characterise]);% Value 0
-
+                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
+                [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Compare_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Detection,Characterise_all_data,Post_process_characterise]);% Value 0
+            
             % Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_detected_seizures,Estimate_all_data]);% Value 0
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_detected_seizures,Estimate_all_data]);% Value 0
         elseif ((get(Seizure_Characterise,'Value') ==0) && (get(Estimate_characterised_seizures,'Value')==0))% Seizure_Characterise unchecked
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,Plot_features,EEG_Seizure_times_data_path,Save_data,SeizureSplitText],...%Invisible
-                        [Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Save_data,Plot_features]);% Value 0           
+                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,Plot_features,EEG_Seizure_times_data_path,Save_data,SeizureSplitText],...%Invisible
+                [Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
+                [Save_data,Plot_features]);% Value 0
         else
-                        setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [Plot_features],...% Invisible+Value 0
-                        [0]);% Value 0
+            setVisInvis([0],...%Visible
+                [0],...%Invisible
+                [Plot_features],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
@@ -275,15 +326,15 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
-                        [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Detection,Seizure_Characterise,Post_process_characterise]);% Value 0
+                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
+                [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Detection,Seizure_Characterise,Post_process_characterise]);% Value 0
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_characterised_seizures,Estimate_detected_seizures]);% Value 0
+            setVisInvis([0],...%Visible
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_characterised_seizures,Estimate_detected_seizures]);% Value 0
         end
     end
 
@@ -294,21 +345,21 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([Select_Seizure_Duration,Select_Channels,Compare_Seizures,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,PaddingString,Padding],...%Visible
-                        [EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
-                        [Process_Seizures,Plot_features,Save_data,Post_process_annotate,Process_annotations,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Characterise,Post_process_characterise,Characterise_all_data]);% Value 0
+                [EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [Process_Seizures,Plot_features,Save_data,Post_process_annotate,Process_annotations,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Characterise,Post_process_characterise,Characterise_all_data]);% Value 0
             set(Seizure_Detection,'Value',1); % Check Seizure Detection
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_characterised_seizures,Estimate_all_data]);% Value 0
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_characterised_seizures,Estimate_all_data]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [PaddingString,Padding],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+                [PaddingString,Padding],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         end
         
     end
@@ -317,23 +368,23 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Estimate_characterised_seizures,'Value')
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-           setVisInvis([PaddingString,Padding,EEGSort,EEG_Seizure_times_data_path,Save_data,Browse_Annotate_EEG,Plot_features,Post_process_annotate],...%Visible
-                        [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
-                        [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Compare_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Detection,Characterise_all_data,Post_process_characterise]);% Value 0
+            setVisInvis([PaddingString,Padding,EEGSort,EEG_Seizure_times_data_path,Save_data,Browse_Annotate_EEG,Plot_features,Post_process_annotate],...%Visible
+                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
+                [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Compare_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Detection,Characterise_all_data,Post_process_characterise]);% Value 0
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_detected_seizures,Estimate_all_data]);% Value 0
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_detected_seizures,Estimate_all_data]);% Value 0
             
         elseif ((get(Seizure_Characterise,'Value') ==0) && (get(Estimate_characterised_seizures,'Value')==0))% Seizure_Characterise unchecked
             setVisInvis([0],...%Visible
-                        [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
-                        [Plot_features,Save_data,Split_Seizure_epoch],...% Invisible+Value 0
-                        [0]);% Value 0
-
+                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [Plot_features,Save_data,Split_Seizure_epoch],...% Invisible+Value 0
+                [0]);% Value 0
+            
         end
     end
 
@@ -341,15 +392,15 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Estimate_all_data,'Value')
             %Detector
             setVisInvis([Select_Channels],...%Visible
-                        [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
-                        [Process_annotations,Process_Seizures,Select_Seizure_Duration,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Detection,Seizure_Characterise,Post_process_characterise]);% Value 0
+                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
+                [Process_annotations,Process_Seizures,Select_Seizure_Duration,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Detection,Seizure_Characterise,Post_process_characterise]);% Value 0
             %Estimator
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_characterised_seizures,Estimate_detected_seizures]);% Value 0
+            setVisInvis([0],...%Visible
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_characterised_seizures,Estimate_detected_seizures]);% Value 0
         end
     end
 
@@ -360,20 +411,20 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([Process_Seizures,Process_annotations,Split_Seizure_epoch],...%Visible
-                        [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
-                        [Select_Seizure_Duration,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Select_Channels,Split_Seizure_epoch],...% Invisible+Value 0
-                        [Seizure_Detection,Seizure_Characterise,Characterise_all_data]);% Value 0
+                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
+                [Select_Seizure_Duration,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Select_Channels,Split_Seizure_epoch],...% Invisible+Value 0
+                [Seizure_Detection,Seizure_Characterise,Characterise_all_data]);% Value 0
             % Estimator
             %~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Estimate_characterised_seizures,Estimate_detected_seizures,Estimate_all_data]);% Value 0
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [Estimate_characterised_seizures,Estimate_detected_seizures,Estimate_all_data]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [PaddingString,Padding,EEG_Seizure_times_data_path,Browse_Annotate_EEG],...%Invisible
-                        [Process_annotations,Process_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
-                        [0]);% Value 0
+                [PaddingString,Padding,EEG_Seizure_times_data_path,Browse_Annotate_EEG],...%Invisible
+                [Process_annotations,Process_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
@@ -384,43 +435,43 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 % ~
     function ProcessC(varargin)
         if get(Post_process_annotate,'value')
-                        setVisInvis([Split_Seizure_epoch],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+            setVisInvis([Split_Seizure_epoch],...%Visible
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [0],...%Invisible
-                        [Split_Seizure_epoch],...% Invisible+Value 0
-                        [0]);% Value 0
+                [0],...%Invisible
+                [Split_Seizure_epoch],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
     function ProcessCharacterise(varargin)
         if get(Process_annotations,'Value')
             setVisInvis([PaddingString,Padding,Split_Seizure_epoch],...%Visible
-                        [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [Process_Seizures]);% Value 0
+                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
+                [0],...% Invisible+Value 0
+                [Process_Seizures]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [PaddingString,Padding],...%Invisible
-                        [Split_Seizure_epoch],...% Invisible+Value 0
-                        [0]);% Value 0
+                [PaddingString,Padding],...%Invisible
+                [Split_Seizure_epoch],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
     function CompareDetect(varargin)
         if get(Process_Seizures,'Value')
             setVisInvis([Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Visible
-                        [PaddingString,Padding],...%Invisible
-                        [Split_Seizure_epoch],...% Invisible+Value 0
-                        [Process_annotations]);% Value 0
+                [PaddingString,Padding],...%Invisible
+                [Split_Seizure_epoch],...% Invisible+Value 0
+                [Process_annotations]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
@@ -429,14 +480,14 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
     function CompareCHK(varargin)
         if get(Compare_Seizures,'Value') % Check if checkbox is checked
             setVisInvis([Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
@@ -444,14 +495,14 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
     function SelectChannels(varargin)
         if get(Select_Channels,'Value')
             setVisInvis([ChannelText,Channel],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0            
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [ChannelText,Channel],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0  
+                [ChannelText,Channel],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
@@ -459,28 +510,28 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
     function SpecifyDuration(varargin)
         if get(Select_Seizure_Duration,'Value')
             setVisInvis([DurationText,SeizureDuration],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0            
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [DurationText,SeizureDuration],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0  
+                [DurationText,SeizureDuration],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         end
     end
 
     function SplitChar(varargin)
-        if get(Split_Seizure_epoch,'value') 
+        if get(Split_Seizure_epoch,'value')
             setVisInvis([SeizureSplitText,SeizureSplitEdit],...%Visible
-                        [0],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+                [0],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         else
             setVisInvis([0],...%Visible
-                        [SeizureSplitText,SeizureSplitEdit],...%Invisible
-                        [0],...% Invisible+Value 0
-                        [0]);% Value 0
+                [SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [0],...% Invisible+Value 0
+                [0]);% Value 0
         end
         
     end
@@ -503,13 +554,18 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         set(ErrorMessage,'Visible','Off') % Turn off error message edit box
         set(ErrorMessage,'string','Analysis Started') % Set error message
         set(ErrorMessage,'Visible','On') % Display error message
+        Gui = guidata(EEG_data_path);
         filepath =  get(EEG_data_path,'string'); % Get filepath from edit box
         if isempty(filepath) % Determine if filepath specified
             set(ErrorMessage,'string','No .eeg filepath specified') % Inform user that no filepath is specified
             set(ErrorMessage,'Visible','On') % Show error message
             return % End callback
         else
-            DetectorSettings.EEGFilepath=filepath; % Set detector settings with filepath specified
+            if get(Batch_process,'Value')
+                DetectorSettings.EEGFilepath=Gui.Data; % Set detector settings with filepath specified
+            else
+                DetectorSettings.EEGFilepath= filepath;
+            end % Set detector settings with filepath specified
         end
         if get(Seizure_Detection,'Value') ==1 % Check if Seizure_Detection is checked
             LLThres = get(LineLengthThreshold,'string'); % Get value in edit box specifying threshold for line length
@@ -536,7 +592,11 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                     set(ErrorMessage,'Visible','On') % Show error message
                     return % End callback
                 else
-                    DetectorSettings.ExcelFilepath =  Excel_data_filepath; % Set filepath for excel file in detector settings
+                    if get(Batch_process,'Value')
+                        DetectorSettings.ExcelFilepath =  Gui.Annotate; % Set filepath for excel file in detector settings
+                    else
+                        DetectorSettings.ExcelFilepath=Excel_data_filepath;
+                    end % Set filepath for excel file in detector settings
                 end
             end
             if get(Select_Channels,'Value')
@@ -570,7 +630,11 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                 set(ErrorMessage,'Visible','On') % Show error message
                 return % End callback
             else
-                DetectorSettings.ExcelFilepath = Excel_data_filepath; % Set filepath for excel file in detector settings
+                if get(Batch_process,'Value')
+                    DetectorSettings.ExcelFilepath =  Gui.Annotate; % Set filepath for excel file in detector settings
+                else
+                    DetectorSettings.ExcelFilepath=Excel_data_filepath;
+                end % Set filepath for excel file in detector settings
             end
             PaddingStr = get(Padding,'string');
             if ~isempty(PaddingStr)
@@ -600,13 +664,13 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         elseif get(Post_process_characterise,'Value')
             if get(Process_annotations,'Value')
                 if get(Split_Seizure_epoch,'value')
-                SplitVal = get(SeizureSplitEdit,'string');
-                if ~isempty(SplitVal)
-                    DetectorSettings.SplitSeizure = SplitVal;
-                else
-                    DetectorSettings.SplitSeizure ='4';
+                    SplitVal = get(SeizureSplitEdit,'string');
+                    if ~isempty(SplitVal)
+                        DetectorSettings.SplitSeizure = SplitVal;
+                    else
+                        DetectorSettings.SplitSeizure ='4';
+                    end
                 end
-            end
                 PaddingStr = get(Padding,'string');
                 if ~isempty(PaddingStr)
                     DetectorSettings.Padding = PaddingStr;
@@ -619,68 +683,72 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                     set(ErrorMessage,'Visible','On') % Show error message
                     return % End callback
                 else
-                    DetectorSettings.ExcelFilepath = Excel_data_filepath; % Set filepath for excel file in detector settings
+                    if get(Batch_process,'Value')
+                        DetectorSettings.ExcelFilepath =  Gui.Annotate; % Set filepath for excel file in detector settings
+                    else
+                        DetectorSettings.ExcelFilepath=Excel_data_filepath;
+                    end % Set filepath for excel file in detector settings
                 end % Check if no options selected
                 DetectorSettings.CompareS=1;
             else
                 Option1=0;
             end
         end
-            
-            if get(Estimate_characterised_seizures,'Value')
-                EstimatorType = [0 1 0];
-                DetectorSettings.ProcessAnnotated = get(Post_process_annotate,'Value');
-            elseif get(Estimate_all_data,'Value')
-                if get(Select_Channels,'Value')
-                    ChannelsRequested = get(Channel,'string');
-                    if isempty(ChannelsRequested)
-                        DetectorSettings.Channels ='all';
-                    else
-                        DetectorSettings.Channels =ChannelsRequested;
-                    end
+        
+        if get(Estimate_characterised_seizures,'Value')
+            EstimatorType = [0 1 0];
+            DetectorSettings.ProcessAnnotated = get(Post_process_annotate,'Value');
+        elseif get(Estimate_all_data,'Value')
+            if get(Select_Channels,'Value')
+                ChannelsRequested = get(Channel,'string');
+                if isempty(ChannelsRequested)
+                    DetectorSettings.Channels ='all';
+                else
+                    DetectorSettings.Channels =ChannelsRequested;
                 end
-                EstimatorType=[0 0 1];
-            else
-                Option2 =0;
             end
-            if ~(Option1 ||Option2)
-                set(ErrorMessage,'string','No option selected') % Set error message
-                set(ErrorMessage,'Visible','On') % Show error message
-                return % End callback
-            end
-            refreshdata
-            ChannelsRequested = get(ChannelChoice,'string');
-            if isempty(ChannelsRequested)
-                DetectorSettings.Animals ='all';
-            else
-                DetectorSettings.Animals =ChannelsRequested;
-            end
-            Analyse_EEG_GUI_Estimation(DetectorSettings,EstimatorSettings,ProgramType, EstimatorType); % Begin analysis of data
-            set(ErrorMessage,'string','Analysis Finished') % Inform user that analysis is finished
+            EstimatorType=[0 0 1];
+        else
+            Option2 =0;
         end
+        if ~(Option1 ||Option2)
+            set(ErrorMessage,'string','No option selected') % Set error message
+            set(ErrorMessage,'Visible','On') % Show error message
+            return % End callback
+        end
+        refreshdata
+        ChannelsRequested = get(ChannelChoice,'string');
+        if isempty(ChannelsRequested)
+            DetectorSettings.Animals ='all';
+        else
+            DetectorSettings.Animals =ChannelsRequested;
+        end
+        Analyse_EEG_GUI_Estimation(DetectorSettings,EstimatorSettings,ProgramType, EstimatorType); % Begin analysis of data
+        set(ErrorMessage,'string','Analysis Finished') % Inform user that analysis is finished
+    end
 end
-    
+
 function setVisInvis(Vis,Invis,InvVal,Val)
 
 if Vis(1) ~=0
-for k =1:length(Vis)
-    set(Vis(k),'Visible','On')
-end
+    for k =1:length(Vis)
+        set(Vis(k),'Visible','On')
+    end
 end
 if Invis(1) ~=0
-for k =1:length(Invis)
-    set(Invis(k),'Visible','Off')
-end
+    for k =1:length(Invis)
+        set(Invis(k),'Visible','Off')
+    end
 end
 if InvVal(1) ~=0
-for k =1:length(InvVal)
-    set(InvVal(k),'Visible','Off','Value',0)
-end
+    for k =1:length(InvVal)
+        set(InvVal(k),'Visible','Off','Value',0)
+    end
 end
 if Val(1) ~=0
-for k =1:length(Val)
-    set(Val(k),'Value',0);
-end
+    for k =1:length(Val)
+        set(Val(k),'Value',0);
+    end
 end
 end
 

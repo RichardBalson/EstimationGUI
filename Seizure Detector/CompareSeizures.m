@@ -1,5 +1,6 @@
 function CompareSeizures(Start,Animal,Seizure_Compare,SeizureTimes,Day)
 % Created by Richard Balson 28/05/2013
+
 if Day ==1
 StartSecond = (Start.Hours*60+Start.Minutes)*60+Start.Seconds;
 else 
@@ -10,7 +11,7 @@ SeizureSec(:,2) = hms2sec(SeizureTimes.SeizureEndT);
 % SeizureSec(SeizureSec==0) = SeizureSec(SeizureSec==0
 [Detect_seizure_matrix, Annotate_seizure_matrix] = Seizure2binary(Seizure_Compare,SeizureSec,StartSecond);
 [Seizures_Correctly_Detected, False_Positive, False_Negative, SeizureStartTimeError, SeizureEndTimeError, TotalError, SeizureMatchIndex, Seizures_Detected, Actual_Seizures, Annotated_Seizure_Duration] ...
-    = Seizure_Count_Correct(Detect_seizure_matrix,Annotate_seizure_matrix);
+    = Seizure_Count_Correct(Detect_seizure_matrix,Annotate_seizure_matrix,Start,Day);
 WriteExcel(Start.Day,Start.Month,Start.Year,Animal,Seizures_Correctly_Detected,False_Positive,False_Negative,SeizureStartTimeError,SeizureEndTimeError,TotalError,SeizureMatchIndex,Seizures_Detected,Actual_Seizures,Annotated_Seizure_Duration,Day);
 
 
@@ -19,15 +20,26 @@ function [Seconds] = hms2sec(Time)
 
 Seconds = zeros(size(Time,1),1);
 for k = 1:length(Time)
+    if iscell(Time)
     index = cell2mat(strfind(Time{k},':'));
+    else
+        index = strfind(Time(k,:),':');
+    end
     if isempty(index)
         Seconds(k)=0;
         continue
     end
+    if iscell(Time)
     [HoursS Remainder] = strtok(Time{k},':');
-    [MinutesS Remainder] = strtok(Remainder,':');
+        [MinutesS Remainder] = strtok(Remainder,':');
     [SecondsS Remainder] = strtok(Remainder,':');
     Seconds(k) = str2double(SecondsS{1})+60*(str2double(MinutesS{1})+60*str2double(HoursS{1}));
+    else
+       [HoursS Remainder] = strtok(Time(k,:),':'); 
+       [MinutesS Remainder] = strtok(Remainder,':');
+    [SecondsS Remainder] = strtok(Remainder,':');
+    Seconds(k) = str2double(SecondsS(:))+60*(str2double(MinutesS(:))+60*str2double(HoursS(:)));
+    end
 %     Hours = str2double(Time{k}{1:index(1)-1});
 %     Minutes = str2double(Time{k}(index(1)+1:index(2)-1));
 %     Seconds(k) = str2double(Time{k}(index(2)+1:end)) + 60*(Minutes +60*Hours);
@@ -58,12 +70,28 @@ for k =1:length(ASMIndex)
     end
 end
 
-function [Correct, FP, FN, SSError, SEError, Percentage_Error_Total, index, SD, AS,ASMD] = Seizure_Count_Correct(DSM,ASM)
+function [Correct, FP, FN, SSError, SEError, Percentage_Error_Total, index, SD, AS,ASMD] = Seizure_Count_Correct(DSM,ASM,Start,Day)
 % Determine the number of correctly detected seizures,  how many seizures
 % have been missed by the detector(FN) and how many non seizure events are
 % marked by the detector as seizure (FP)
 
-Percentage_Error_Total = sum(abs(ASM-DSM))/length(DSM)*100;
+if (Day ==1 && (Start.StudyLength> 24*60*60-Start.Time_adjustmentT))
+    index = Start.Time_adjustmentT:24*60*60;
+    DayLength = length(DSM)-Start.Time_adjustmentT;
+elseif Day ==1
+    index = Start.Time_adjustmentT:(Start.Time_adjustmentT+Start.StudyLength);
+    DayLength = Start.StudyLength;
+else
+    DayLength = Start.StudyLength-(Day-1)*24*60*60+Start.Time_adjustmentT;
+    if DayLength >24*60*60
+        DayLength = 24*60*60;
+        index = 1:24*60*60;
+    else
+        index = 1:DayLength;
+    end
+end
+Percentage_Error_Total = sum(abs(ASM(index)-DSM(index)))/(DayLength)*100; % If study is less than a day
+Percentage_Error_Total = sum(abs(ASM-DSM))/(length(DSM))*100;
 DSMIndexStart = strfind(DSM,[0 1])+1;
 DSMIndexEnd = strfind(DSM,[1 0]);
 ASMIndexStart = strfind(ASM,[0 1])+1;
@@ -96,7 +124,7 @@ end
     function WriteExcel(D,M,Y,Animal,SCD,FP,FN,SSError,SEError,TE,SMI,SD,AS,ASD,Day)
     % This function writes all data to excel
     
-    Spreadsheet_Name = ['Comparison AnimalNumber ',int2str(Animal),' D ',int2str(D+Day-1),'_',int2str(M),'_',int2str(Y),'.xls']; % Initilaise spreadsheet name
+    Spreadsheet_Name = ['Comparison_AnimalNumber ',int2str(k),' SD',int2str(Start.Day),'CD',int2str(Start.Day+Day-1),'_',int2str(Start.Month),'_',int2str(Start.Year),'.xls']; % Initilaise spreadsheet name
     Sheet_name = 'Results'; % Initilaise sheet name
    Excel_dataT = {'Seizures Detected','Annotated Seizures','Seizure Correctly Detected','False Postives', 'False Negatives', 'Total error over data segment(%)', 'Seizure Start Error','Seizure End Error','Match Index Detect', 'Match Index Annotate','Annotated Seizure Duration'}; % Specify names for EEG feature data
     Excel_dataD = [SD,AS,SCD,FP,FN,TE]; % Specify features to write to excel
