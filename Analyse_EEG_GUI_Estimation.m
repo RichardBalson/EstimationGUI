@@ -230,7 +230,7 @@ for direct = 1:length(EEGDir)
                     end
                     
                     if m ==1 % Check if currently looking at first channel
-                        
+                        Previous_Data = All_Channel_Data;
                         All_Channel_Data = zeros(length(Data_out),ChannelLength(k)); % Intialise variable to store all channels for the particular animal considered
                         
                     end
