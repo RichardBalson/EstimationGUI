@@ -230,123 +230,133 @@ for direct = 1:length(EEGDir)
                     end
                     
                     if m ==1 % Check if currently looking at first channel
-                        Previous_Data = All_Channel_Data;
-                        All_Channel_Data = zeros(length(Data_out),ChannelLength(k)); % Intialise variable to store all channels for the particular animal considered
-                        
-                    end
-                    if ~isempty(Data_out) % Check if data was extracted from profusion
-                        All_Channel_Data(:,m) = Data_out; % Put current data from specified channel into channel specific format
-                    end
-                end
-                
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                % Data Analysis
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                
-                if (exist('All_Channel_Data','var')) % Check whether data has been inserted into All_Channel_Data
-                    if ProgramType(1) ==1 % Seizure Detector
-                        [Seizure_start, Seizure_end, Seizure_time_ref] = Seizure_Detector2(All_Channel_Data,window_length,fs,j,Start,interval_duration,LLthreshold,k,Ampthreshold); % Determine whether a seizure occured in the specifed winodw for the particular animal, and determine the start and end time
-                        
-                        if (~isempty(Seizure_start)) % Check if a seizure start was found
-                            Animal(k,inc).SeizureStartT(end+1*(j>1):end+1*(j>1)+length(Seizure_start)-1) = num2cell(Seizure_start'); % Write data to animal specific structure structure
-                            if EstimatorType(1)
-                                Estimate_Detected_Seizures(All_Channel_Data,fs,Start,k,Seizure_time_ref,StartTime,EstimatorType,Padding)
+                        if EstimatorType(2)
+                            Previous_Data = All_Channel_Data;
+                            if ~exist('Extra_time_check','var')
+                                Extra_time_check =0;
+                                Dur =[];
                             end
+                            All_Channel_Data = zeros(length(Data_out),ChannelLength(k)); % Intialise variable to store all channels for the particular animal considered
+                            
                         end
-                        if (~isempty(Seizure_end)) % Check if a seizure end was found
-                            Animal(k,inc).SeizureEndT(end+1*(j>1):end+1*(j>1)+length(Seizure_end)-1) = num2cell(Seizure_end');% Write data to animal specific structure structure
+                        if ~isempty(Data_out) % Check if data was extracted from profusion
+                            All_Channel_Data(:,m) = Data_out; % Put current data from specified channel into channel specific format
                         end
-                    elseif ProgramType(2) ==1 % Seizure Characterise
-                        Analyse_data_characterise(All_Channel_Data,window_length,frequency_bands,fs,k,j,Start,DetectorSettings.PlotFeatures) % Analyse data, results are sent to spreadsheets
-                    elseif ProgramType(3)
-                        Analyse_data_characterise_bkg(All_Channel_Data,window_length,frequency_bands,fs,k,j,StartDateTime) % Analyse data, results are sent to spreadsheets
                     end
-                    if EstimatorType(2)
-                        Seizure_time_ref = [0, Duration];
-                        Estimate_Detected_Seizures(All_Channel_Data,fs,Start,k,Seizure_time_ref,StartTime,EstimatorType,0)
-                    elseif EstimatorType(3)
-                        Seizure_time_ref = [0, Duration];
-                        Estimate_Detected_Seizures(All_Channel_Data,fs,Start,k,Seizure_time_ref,StartTime,EstimatorType,0)
+                    
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    % Data Analysis
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    
+                    if (exist('All_Channel_Data','var')) % Check whether data has been inserted into All_Channel_Data
+                        if ProgramType(1) ==1 % Seizure Detector
+                            [Seizure_start, Seizure_end, Seizure_time_ref] = Seizure_Detector2(All_Channel_Data,window_length,fs,j,Start,interval_duration,LLthreshold,k,Ampthreshold); % Determine whether a seizure occured in the specifed winodw for the particular animal, and determine the start and end time
+                            
+                            if (~isempty(Seizure_start)) % Check if a seizure start was found
+                                Animal(k,inc).SeizureStartT(end+1*(j>1):end+1*(j>1)+length(Seizure_start)-1) = num2cell(Seizure_start'); % Write data to animal specific structure structure
+                            end
+                            if (~isempty(Seizure_end)) % Check if a seizure end was found
+                                Animal(k,inc).SeizureEndT(end+1*(j>1):end+1*(j>1)+length(Seizure_end)-1) = num2cell(Seizure_end');% Write data to animal specific structure structure
+                            end
+                            if EstimatorType(1)
+                                if (~isempty(Seizure_start) || Extra_time_check)
+                                    if Extra_time_check
+                                        Seizure_time_ref = [1 Dur];
+                                    end
+                                    [Extra_time_check Dur] = Estimate_Detected_Seizures(All_Channel_Data,fs,Start,k,Seizure_time_ref,StartTime,Padding,Previous_Data)
+                                end
+                            end
+                        elseif ProgramType(2) ==1 % Seizure Characterise
+                            Analyse_data_characterise(All_Channel_Data,window_length,frequency_bands,fs,k,j,Start,DetectorSettings.PlotFeatures) % Analyse data, results are sent to spreadsheets
+                        elseif ProgramType(3)
+                            Analyse_data_characterise_bkg(All_Channel_Data,window_length,frequency_bands,fs,k,j,StartDateTime) % Analyse data, results are sent to spreadsheets
+                        end
+                        if EstimatorType(2)
+                            Seizure_time_ref = [0, Duration];
+                            Estimate_Detected_Seizures(All_Channel_Data,fs,Start,k,Seizure_time_ref,StartTime,EstimatorType,0)
+                        elseif EstimatorType(3)
+                            Seizure_time_ref = [0, Duration];
+                            Estimate_Detected_Seizures(All_Channel_Data,fs,Start,k,Seizure_time_ref,StartTime,EstimatorType,0)
+                        end
+                    end
+                    
+                end
+                if ProgramType(1) ==1 % Check if seizure detection is selected
+                    Sheet_name = 'Seizure Start and End'; % Specify sheet name
+                    for Day = 1:inc
+                        Spreadsheet_Name = ['SeizuresDetected_AnimalNumber ',int2str(k),' SD',int2str(Start.Day),'CD',int2str(Start.Day+Day-1),'_',int2str(Start.Month),'_',int2str(Start.Year),'.xls'];  % Specify name for spreadsheet
+                        xlswrite(Spreadsheet_Name,{'Seizure Start', 'Seizure End','Line Length Threshold','Amplitude Threshold'},Sheet_name,'A1'); % Write names for each column
+                        xlswrite(Spreadsheet_Name,[LLthreshold, Ampthreshold],'C2');
+                        if length(Animal(k,Day).SeizureStartT)>1 % Check if a seizure was found for the animal of interest
+                            a={Animal(k,Day).SeizureStartT{:}; Animal(k,Day).SeizureEndT{:}}'; % Create a cell with all seizure data
+                            xlswrite(Spreadsheet_Name,[a{2:end,1}; a{2:end,2}]',Sheet_name,'A2'); % Write seizure data detected into excel sheet
+                        end
+                    end
+                    if DetectorSettings.CompareSeizures
+                        Start.Time_adjustmentT = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds;
+                        Temp = Seizure_Compare(:,:,k);
+                        Temp(Temp<Start.Time_adjustmentT) = Temp(Temp<Start.Time_adjustmentT)+Day_duration;
+                        Annotated_data = zeros(size(Seizure_Compare,1),size(Seizure_Compare,2),2,inc);
+                        for Day = 1:inc
+                            Annotated_data = Temp(Temp(:,1)>Day_duration*(Day-1) & Temp(:,1)<Day_duration*(Day),:);
+                            %  Sort out Seizure Compare File to make sure that it is working correctly for different days
+                            CompareSeizures(Start,k,Annotated_data,Animal(k,Day),Day);
+                        end
                     end
                 end
-                
             end
-            if ProgramType(1) ==1 % Check if seizure detection is selected
-                Sheet_name = 'Seizure Start and End'; % Specify sheet name
-                for Day = 1:inc
-                    Spreadsheet_Name = ['SeizuresDetected_AnimalNumber ',int2str(k),' SD',int2str(Start.Day),'CD',int2str(Start.Day+Day-1),'_',int2str(Start.Month),'_',int2str(Start.Year),'.xls'];  % Specify name for spreadsheet
-                    xlswrite(Spreadsheet_Name,{'Seizure Start', 'Seizure End','Line Length Threshold','Amplitude Threshold'},Sheet_name,'A1'); % Write names for each column
-                    xlswrite(Spreadsheet_Name,[LLthreshold, Ampthreshold],'C2');
-                    if length(Animal(k,Day).SeizureStartT)>1 % Check if a seizure was found for the animal of interest
-                        a={Animal(k,Day).SeizureStartT{:}; Animal(k,Day).SeizureEndT{:}}'; % Create a cell with all seizure data
-                        xlswrite(Spreadsheet_Name,[a{2:end,1}; a{2:end,2}]',Sheet_name,'A2'); % Write seizure data detected into excel sheet
+        end
+        
+        if DetectorSettings.ProcessAnnotated
+            Epochs = str2num(DetectorSettings.SplitSeizure);
+            if ProgramType(2)==1
+                for k = AnimalN
+                    Directory = dir(['AnimalNumber ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
+                    if ~isempty(Directory)
+                        Directory(1).Animal=k;
+                        ProcessData(Directory,Start,Epochs);
                     end
                 end
-                if DetectorSettings.CompareSeizures
+            else
+                for k = AnimalN
+                    Directory = dir(['AnimalNumber ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
+                    if ~isempty(Directory)
+                        Directory(1:end).Animal=k;
+                        ProcessData(Directory,Start,Epochs);
+                    end
+                end
+            end
+        end
+        if DetectorSettings.CompareS
+            Seizure_Compare = ReadEEGExcel(DetectorSettings.ExcelFilepath,'Matlab',Number_of_animals,Start.Day,0);
+            for k =1:size(Seizure_Compare,3)  %SeizuresDetected_AnimalNumber 1 SD4CD4_8_2013
+                Directory = dir(['SeizuresDetected*Number ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
+                j =1;
+                Temp =0;
+                while j<=length(Directory)
+                    if ~isempty(strfind(Directory(j).name,['CD',int2str(Start.Day+Temp)]))
+                        Days = Temp+1;
+                        DetectorDataT = xlsread(Directory(j).name,'Seizure Start and End');
+                        DetectorData(k,Days).SeizureStartT = datestr(DetectorDataT(:,1),13);
+                        DetectorData(k,Days).SeizureEndT = datestr(DetectorDataT(:,2),13);
+                        j = j+1;
+                    end
+                    Temp = Temp+1;
+                end
+                if exist('Days','var')
                     Start.Time_adjustmentT = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds;
                     Temp = Seizure_Compare(:,:,k);
                     Temp(Temp<Start.Time_adjustmentT) = Temp(Temp<Start.Time_adjustmentT)+Day_duration;
-                    Annotated_data = zeros(size(Seizure_Compare,1),size(Seizure_Compare,2),2,inc);
-                    for Day = 1:inc
+                    Annotated_data = zeros(size(Seizure_Compare,1),size(Seizure_Compare,2),2,Days);
+                    for Day = 1:Days
                         Annotated_data = Temp(Temp(:,1)>Day_duration*(Day-1) & Temp(:,1)<Day_duration*(Day),:);
-                        %  Sort out Seizure Compare File to make sure that it is working correctly for different days
-                        CompareSeizures(Start,k,Annotated_data,Animal(k,Day),Day);
-                    end
+                        CompareSeizures(Start,k,Annotated_data,DetectorData(k,Day),Day);
+                    end % End for loop over number of days the study is over
                 end
-            end
-        end
-    end
+                clear Days
+            end % End for loop over number of animals with annotated seizures
+        end % End if statement to determine whether to compare seizures
+        CMDisconnect_ProFusionEEG4;
+    end% End for loop over batch files
     
-    if DetectorSettings.ProcessAnnotated
-        Epochs = str2num(DetectorSettings.SplitSeizure);
-        if ProgramType(2)==1
-            for k = AnimalN
-                Directory = dir(['AnimalNumber ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
-                if ~isempty(Directory)
-                    Directory(1).Animal=k;
-                    ProcessData(Directory,Start,Epochs);
-                end
-            end
-        else
-            for k = AnimalN
-                Directory = dir(['AnimalNumber ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
-                if ~isempty(Directory)
-                    Directory(1:end).Animal=k;
-                    ProcessData(Directory,Start,Epochs);
-                end
-            end
-        end
-    end
-    if DetectorSettings.CompareS
-        Seizure_Compare = ReadEEGExcel(DetectorSettings.ExcelFilepath,'Matlab',Number_of_animals,Start.Day,0);
-        for k =1:size(Seizure_Compare,3)  %SeizuresDetected_AnimalNumber 1 SD4CD4_8_2013
-            Directory = dir(['SeizuresDetected*Number ',int2str(k),'*SD',int2str(Start.Day),'*.xls']);
-            j =1;
-            Temp =0;
-            while j<=length(Directory)
-                if ~isempty(strfind(Directory(j).name,['CD',int2str(Start.Day+Temp)])) 
-                    Days = Temp+1;
-                    DetectorDataT = xlsread(Directory(j).name,'Seizure Start and End');
-                    DetectorData(k,Days).SeizureStartT = datestr(DetectorDataT(:,1),13);
-                    DetectorData(k,Days).SeizureEndT = datestr(DetectorDataT(:,2),13);
-                    j = j+1;
-                end
-                Temp = Temp+1;
-            end
-            if exist('Days','var')
-            Start.Time_adjustmentT = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds;
-            Temp = Seizure_Compare(:,:,k);
-            Temp(Temp<Start.Time_adjustmentT) = Temp(Temp<Start.Time_adjustmentT)+Day_duration;
-            Annotated_data = zeros(size(Seizure_Compare,1),size(Seizure_Compare,2),2,Days);
-            for Day = 1:Days
-                Annotated_data = Temp(Temp(:,1)>Day_duration*(Day-1) & Temp(:,1)<Day_duration*(Day),:);
-                CompareSeizures(Start,k,Annotated_data,DetectorData(k,Day),Day);
-            end % End for loop over number of days the study is over
-            end
-            clear Days
-        end % End for loop over number of animals with annotated seizures
-    end % End if statement to determine whether to compare seizures
-    CMDisconnect_ProFusionEEG4;
-end% End for loop over batch files
-
-
+    
