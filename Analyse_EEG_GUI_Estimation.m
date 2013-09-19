@@ -81,6 +81,12 @@ for direct = 1:length(EEGDir)
     % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Set initial settings
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ((strcmp(Start.AMPM,'AM')) || ((Start.Hours == 12) && (strcmp(Start.AMPM,'PM')))) % This script filters and extracts profusion data. The startime is the
+        % starttime of seizures relative to midnight, in seconds,
+        Time_adjustment_Days = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds; % remove time delay from recording time initialisation
+    else
+        Time_adjustment_Days = ((Start.Hours+12)*60+Start.Minutes)*60 + Start.Seconds; % remove time delay from recording time initialisation
+    end
     
     if (any(ProgramType) || any(EstimatorType))
         
@@ -95,12 +101,6 @@ for direct = 1:length(EEGDir)
             if DetectorSettings.CompareSeizures
                 Seizure_Compare = ReadEEGExcel(DetectorSettings.ExcelFilepath,'Matlab',Number_of_animals,Start.Day,0);
             end
-        end
-        if ((strcmp(Start.AMPM,'AM')) || ((Start.Hours == 12) && (strcmp(Start.AMPM,'PM')))) % This script filters and extracts profusion data. The startime is the
-            % starttime of seizures relative to midnight, in seconds,
-            Time_adjustment_Days = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds; % remove time delay from recording time initialisation
-        else
-            Time_adjustment_Days = ((Start.Hours+12)*60+Start.Minutes)*60 + Start.Seconds; % remove time delay from recording time initialisation
         end
         
         if (ProgramType(2) || EstimatorType(2)) % Seizure Characterisation is specified
@@ -267,7 +267,7 @@ for direct = 1:length(EEGDir)
                                 end
                             end
                         elseif ProgramType(2) ==1 % Seizure Characterise
-                            Analyse_data_characterise(All_Channel_Data,window_length,frequency_bands,fs,k,j,Start,DetectorSettings.PlotFeatures) % Analyse data, results are sent to spreadsheets
+                            Analyse_data_characterise(All_Channel_Data,window_length,frequency_bands,fs,k,j,Start,DetectorSettings) % Analyse data, results are sent to spreadsheets
                         elseif ProgramType(3)
                             Analyse_data_characterise_bkg(All_Channel_Data,window_length,frequency_bands,fs,k,j,StartDateTime) % Analyse data, results are sent to spreadsheets
                         end
@@ -293,20 +293,43 @@ for direct = 1:length(EEGDir)
                         end
                     end
                     if DetectorSettings.CompareSeizures
-                        Start.Time_adjustmentT = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds;
+                        if ~isnumeric(DetectorSettings.Annotated_Duration)
+                            [Annotated_Duration, Annotated_hour] = strtok(DetectorSettings.Annotated_Duration,',');
+                            [AnnotatedHour, AnnotationDays] = strtok(Annotated_hour,',');
+                            AnnotatedHour = str2num(AnnotatedHour);
+                            if ~isempty(AnnotationDays)
+                                AnnotationDays = str2num(AnnotationDays);
+                            end
+                            Start.AnnotatedDuration = str2num(Annotated_Duration);
+                            if (Start.AnnotatedDuration+AnnotatedHour>24)
+                                AnnotatedDurationLast =  Start.AnnotatedDuration+AnnotatedHour-24;
+                                AnnotatedDurationFirst = 24-AnnotatedHour;
+                                AnnotatedTimes = [AnnotatedHour 24 0 0;...
+                                                  ones(AnnotationDays,1)*[0 AnnotatedDurationLast AnnotatedHour 24];...
+                                                  0 AnnotatedDurationLast 0 0];
+                            else
+                                AnnotatedTimes =  ones(AnnotationDays,1)*[AnnotatedHour, AnnotatedHour+Start.AnnotatedDuration];
+                            end
+                        else
+                            AnnotatedTimes =ones(inc,1)*[0,24];
+                        end
+                        Time_adjustmentT = Time_adjustment_Days;
                         Temp = Seizure_Compare(:,:,k);
-                        Temp(Temp<Start.Time_adjustmentT) = Temp(Temp<Start.Time_adjustmentT)+Day_duration;
+                        Temp(Temp<Time_adjustmentT) = Temp(Temp<Time_adjustmentT)+Day_duration;
                         Annotated_data = zeros(size(Seizure_Compare,1),size(Seizure_Compare,2),2,inc);
                         for Day = 1:inc
+                            Animal(k,day).Detection =1;
                             Annotated_data = Temp(Temp(:,1)>Day_duration*(Day-1) & Temp(:,1)<Day_duration*(Day),:);
                             %  Sort out Seizure Compare File to make sure that it is working correctly for different days
-                            CompareSeizures(Start,k,Annotated_data,Animal(k,Day),Day);
+                            if exists('AnnotatedDuration(Day)','var')
+                                CompareSeizure(Start,k,Annotated_data,Animal(k,Day),Day,AnnotatedTimes(Day,:));
+                            end
                         end
                     end
                 end
             end
         end
-        
+    end
         if DetectorSettings.ProcessAnnotated
             Epochs = str2num(DetectorSettings.SplitSeizure);
             if ProgramType(2)==1
@@ -335,28 +358,60 @@ for direct = 1:length(EEGDir)
                 Temp =0;
                 while j<=length(Directory)
                     if ~isempty(strfind(Directory(j).name,['CD',int2str(Start.Day+Temp)]))
-                        Days = Temp+1;
-                        DetectorDataT = xlsread(Directory(j).name,'Seizure Start and End');
-                        DetectorData(k,Days).SeizureStartT = datestr(DetectorDataT(:,1),13);
-                        DetectorData(k,Days).SeizureEndT = datestr(DetectorDataT(:,2),13);
-                        j = j+1;
+                    Days = Temp+1;
+                    DetectorDataT = xlsread(Directory(j).name,'Seizure Start and End');
+                    if ~isempty(DetectorDataT)
+                        if ~(DetectorDataT(1,1) ==0 && DetectorDataT(1,2) ==0)
+                    DetectorData(k,Days).SeizureStartT = datestr(DetectorDataT(:,1),13);
+                    DetectorData(k,Days).SeizureEndT = datestr(DetectorDataT(:,2),13);
+                    DetectorData(k,Days).Detection =1;
+                    else 
+                        DetectorData(k,Days).Detection =0; % No seizures detected
+                        end
+                    else 
+                        DetectorData(k,Days).Detection =0; % No seizures detected
+                    end
+                    j = j+1;
                     end
                     Temp = Temp+1;
                 end
                 if exist('Days','var')
-                    Start.Time_adjustmentT = ((Start.Hours)*60+Start.Minutes)*60 + Start.Seconds;
+                    if ~isnumeric(DetectorSettings.Annotated_Duration)
+                            [Annotated_Duration, Annotated_hour] = strtok(DetectorSettings.Annotated_Duration,',');
+                            [AnnotatedHour, AnnotationDays] = strtok(Annotated_hour,',');
+                            AnnotatedHour = str2num(AnnotatedHour);
+                            if ~isempty(AnnotationDays)
+                                AnnotationDays = str2num(AnnotationDays);
+                            else
+                                AnnotationDays=1;
+                            end
+                            Start.AnnotatedDuration = str2num(Annotated_Duration);
+                            if (Start.AnnotatedDuration+AnnotatedHour>24)
+                                AnnotatedDurationLast =  Start.AnnotatedDuration+AnnotatedHour-24;
+                                AnnotatedDurationFirst = 24-AnnotatedHour;
+                                AnnotatedTimes = [AnnotatedHour 24 0 0;...
+                                                  ones(AnnotationDays,1)*[0 AnnotatedDurationLast AnnotatedHour 24];...
+                                                  0 AnnotatedDurationLast 0 0];
+                            else
+                                AnnotatedTimes =  ones(AnnotationDays,1)*[AnnotatedHour, AnnotatedHour+Start.AnnotatedDuration];
+                            end
+                        else
+                            AnnotatedTimes =ones(inc,1)*[0,24];
+                        end
+                    Start.Time_adjustmentT = Time_adjustment_Days;
                     Temp = Seizure_Compare(:,:,k);
                     Temp(Temp<Start.Time_adjustmentT) = Temp(Temp<Start.Time_adjustmentT)+Day_duration;
                     Annotated_data = zeros(size(Seizure_Compare,1),size(Seizure_Compare,2),2,Days);
                     for Day = 1:Days
                         Annotated_data = Temp(Temp(:,1)>Day_duration*(Day-1) & Temp(:,1)<Day_duration*(Day),:);
-                        CompareSeizures(Start,k,Annotated_data,DetectorData(k,Day),Day);
+                        CompareSeizure(Start,k,Annotated_data,DetectorData(k,Day),Day,AnnotatedTimes(Day,:));
                     end % End for loop over number of days the study is over
                 end
                 clear Days
             end % End for loop over number of animals with annotated seizures
         end % End if statement to determine whether to compare seizures
         CMDisconnect_ProFusionEEG4;
-    end% End for loop over batch files
-    
-    
+% End for loop over batch files
+end
+
+

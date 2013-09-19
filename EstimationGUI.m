@@ -108,6 +108,10 @@ DurationText = uicontrol('style','text','parent',GUIFigure,'units','normalized',
 
 SeizureSplitText = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.7 0.7 0.29 0.04],'string','Split Seizure (4)','Visible','off');
 
+Annotated_Duration_text = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.7 0.45 0.29 0.04],'string','Annotation Duration (Hours), Start Time (24hour 18:00:00)','Visible','off');
+
+ZCDThreshold_text = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.7 0.7 0.29 0.04],'string','Zero Crossing Detector Threshold','Visible','off');
+
 % PostprocessString = uicontrol('style','text','parent',GUIFigure,'units','normalized','position',[0.03 0.55 0.35 0.04],'string','Characterised seizures Excel file','Visible','off');
 % Edit boxes
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +124,7 @@ ErrorMessage = uicontrol('style','edit','parent',GUIFigure,'units','normalized',
 
 ChannelChoice = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.4 0.5 0.25 0.04]);
 
-% Optional edit boxes
+% Conditional edit boxes
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % Available when Seizure Charaterise is checked. Edit box for details about EEG Seizure Data Times
@@ -143,6 +147,10 @@ Channel = uicontrol('style','edit','parent',GUIFigure,'units','normalized','posi
 SeizureDuration = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.7 0.5 0.29 0.04],'Visible','off');
 
 SeizureSplitEdit = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.7 0.65 0.29 0.04],'Visible','off');
+
+Annotated_Duration = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.7 0.4 0.29 0.04],'Visible','off');
+
+ZCDThreshold = uicontrol('style','edit','parent',GUIFigure,'units','normalized','position',[0.7 0.65 0.29 0.04],'Visible','off');
 
 % PushButton
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,7 +194,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 
     function Batch(varargin)
         if get(Batch_process,'Value')
-           set(Clear_batch_list,'visible','on');
+            set(Clear_batch_list,'visible','on');
         else
             set(Clear_batch_list,'visible','off');
         end
@@ -259,7 +267,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~`
             setVisInvis([Select_Seizure_Duration,Select_Channels,Compare_Seizures,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Visible
-                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Process_Seizures,Plot_features,Save_data,Post_process_annotate,Process_annotations,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Characterise,Post_process_characterise,Characterise_all_data]);% Value 0
             
@@ -275,7 +283,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis(0,...%Visible
-                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
+                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,Annotated_Duration,Annotated_Duration_text],...%Invisible
                 [Select_Seizure_Duration,Select_Channels,Compare_Seizures],...% Invisible+Value 0
                 0);% Value 0
             % Estimator
@@ -293,8 +301,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Seizure_Characterise,'Value') % Determine if box checked or unchecked
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~
-            setVisInvis([PaddingString,Padding,EEGSort,EEG_Seizure_times_data_path,Save_data,Browse_Annotate_EEG,Plot_features,Post_process_annotate],...%Visible
-                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
+            setVisInvis([PaddingString,Padding,EEGSort,EEG_Seizure_times_data_path,Save_data,Browse_Annotate_EEG,Plot_features,Post_process_annotate,ZCDThreshold_text,ZCDThreshold],...%Visible
+                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,Annotated_Duration,Annotated_Duration_text],...%Invisible
                 [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Compare_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Detection,Characterise_all_data,Post_process_characterise]);% Value 0
             
@@ -308,7 +316,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,Plot_features,EEG_Seizure_times_data_path,Save_data,SeizureSplitText],...%Invisible
+                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,Plot_features,EEG_Seizure_times_data_path,Save_data,SeizureSplitText,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
                 [Save_data,Plot_features]);% Value 0
         else
@@ -326,7 +334,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~
             setVisInvis([0],...%Visible
-                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
+                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,...
+                LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText,Annotated_Duration,Annotated_Duration_text,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Detection,Seizure_Characterise,Post_process_characterise]);% Value 0
             %Estimator
@@ -345,7 +354,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([Select_Seizure_Duration,Select_Channels,Compare_Seizures,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,PaddingString,Padding],...%Visible
-                [EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit,Annotated_Duration,Annotated_Duration_text,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Process_Seizures,Plot_features,Save_data,Post_process_annotate,Process_annotations,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Characterise,Post_process_characterise,Characterise_all_data]);% Value 0
             set(Seizure_Detection,'Value',1); % Check Seizure Detection
@@ -369,7 +378,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([PaddingString,Padding,EEGSort,EEG_Seizure_times_data_path,Save_data,Browse_Annotate_EEG,Plot_features,Post_process_annotate],...%Visible
-                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold],...%Invisible
+                [DurationText,SeizureDuration,ChannelText,Channel,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,Annotated_Duration,Annotated_Duration_text],...%Invisible
                 [Process_annotations,Process_Seizures,Select_Seizure_Duration,Select_Channels,Compare_Seizures,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Detection,Characterise_all_data,Post_process_characterise]);% Value 0
             %Estimator
@@ -381,7 +390,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             
         elseif ((get(Seizure_Characterise,'Value') ==0) && (get(Estimate_characterised_seizures,'Value')==0))% Seizure_Characterise unchecked
             setVisInvis([0],...%Visible
-                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit],...%Invisible
+                [PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,SeizureSplitText,SeizureSplitEdit,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Plot_features,Save_data,Split_Seizure_epoch],...% Invisible+Value 0
                 [0]);% Value 0
             
@@ -392,7 +401,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         if get(Estimate_all_data,'Value')
             %Detector
             setVisInvis([Select_Channels],...%Visible
-                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
+                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,...
+                LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText,Annotated_Duration,Annotated_Duration_text,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Process_annotations,Process_Seizures,Select_Seizure_Duration,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Detection,Seizure_Characterise,Post_process_characterise]);% Value 0
             %Estimator
@@ -411,7 +421,8 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             % Detector
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~
             setVisInvis([Process_Seizures,Process_annotations,Split_Seizure_epoch],...%Visible
-                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText],...%Invisible
+                [DurationText,SeizureDuration,ChannelText,Channel,PaddingString,Padding,EEGSort,Browse_Annotate_EEG,EEG_Seizure_times_data_path,...
+                LineLengthString,AmplitudeString,LineLengthThreshold,AmplitudeThreshold,SeizureSplitEdit,SeizureSplitText,Annotated_Duration,Annotated_Duration_text,ZCDThreshold_text,ZCDThreshold],...%Invisible
                 [Select_Seizure_Duration,Plot_features,Save_data,Compare_Seizures,Post_process_annotate,Select_Channels,Split_Seizure_epoch],...% Invisible+Value 0
                 [Seizure_Detection,Seizure_Characterise,Characterise_all_data]);% Value 0
             % Estimator
@@ -463,13 +474,13 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 
     function CompareDetect(varargin)
         if get(Process_Seizures,'Value')
-            setVisInvis([Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Visible
+            setVisInvis([Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort,Annotated_Duration,Annotated_Duration_text],...%Visible
                 [PaddingString,Padding],...%Invisible
                 [Split_Seizure_epoch],...% Invisible+Value 0
                 [Process_annotations]);% Value 0
         else
             setVisInvis([0],...%Visible
-                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
+                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort,Annotated_Duration,Annotated_Duration_text],...%Invisible
                 [0],...% Invisible+Value 0
                 [0]);% Value 0
         end
@@ -479,13 +490,13 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~
     function CompareCHK(varargin)
         if get(Compare_Seizures,'Value') % Check if checkbox is checked
-            setVisInvis([Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Visible
+            setVisInvis([Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort,Annotated_Duration,Annotated_Duration_text],...%Visible
                 [0],...%Invisible
                 [0],...% Invisible+Value 0
                 [0]);% Value 0
         else
             setVisInvis([0],...%Visible
-                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort],...%Invisible
+                [Browse_Annotate_EEG,EEG_Seizure_times_data_path,EEGSort,Annotated_Duration,Annotated_Duration_text],...%Invisible
                 [0],...% Invisible+Value 0
                 [0]);% Value 0
         end
@@ -542,7 +553,7 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function StartProgram(varargin)
         DetectorSettings = struct('EEGFilepath',{{0}},'ExcelFilepath',{{0}},'PlotFeatures',0,'LLThres',0,'AmpThres',0,'CompareSeizures',0,...
-            'Padding','10','Animals',0,'SaveData',0,'ProcessAnnotated',0,'CompareS',0,'MinSeizure','0','Channels','all','SplitSeizure','1');
+            'Padding','10','Animals',0,'SaveData',0,'ProcessAnnotated',0,'CompareS',0,'MinSeizure','0','Channels','all','SplitSeizure','1','Annotated_Duration',0,'ZCDThreshold','2');
         EstimatorSettings = struct();
         EstimatorType = [0 0 0];
         ProgramType = [0 0 0];% Index 1 Detector, 2 characterise seizures, 3 characterise background
@@ -556,6 +567,13 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
         set(ErrorMessage,'Visible','On') % Display error message
         Gui = guidata(EEG_data_path);
         filepath =  get(EEG_data_path,'string'); % Get filepath from edit box
+        if ~iscell(filepath)
+            filepath ={filepath};
+        end
+        Excel_data_filepath =  get(EEG_Seizure_times_data_path,'string');
+        if ~iscell(Excel_data_filepath)
+            Excel_data_filepath = {Excel_data_filepath};
+        end
         if isempty(filepath) % Determine if filepath specified
             set(ErrorMessage,'string','No .eeg filepath specified') % Inform user that no filepath is specified
             set(ErrorMessage,'Visible','On') % Show error message
@@ -586,7 +604,6 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             end
             if get(Compare_Seizures,'Value')
                 DetectorSettings.CompareSeizures =1;
-                Excel_data_filepath =  get(EEG_Seizure_times_data_path,'string'); % Get excel filepath from edit box
                 if isempty(Excel_data_filepath)% Check if excel filepath exists
                     set(ErrorMessage,'string','No excel filepath specified') % Set error message
                     set(ErrorMessage,'Visible','On') % Show error message
@@ -597,6 +614,10 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                     else
                         DetectorSettings.ExcelFilepath=Excel_data_filepath;
                     end % Set filepath for excel file in detector settings
+                end
+                Duration_Data = get(Annotated_Duration,'string');
+                if ~isempty(Duration_Data)
+                    DetectorSettings.Annotated_Duration = Duration_Data;
                 end
             end
             if get(Select_Channels,'Value')
@@ -622,7 +643,6 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
             
         elseif get(Seizure_Characterise,'Value') ==1 % Check if seizure characterisation is checked
             DetectorSettings.PlotFeatures = get(Plot_features,'Value'); % Update detector settings with plot features
-            Excel_data_filepath =  get(EEG_Seizure_times_data_path,'string'); % Get excel filepath from edit box
             DetectorSettings.SaveData = get(Save_data,'Value');
             DetectorSettings.ProcessAnnotated = get(Post_process_annotate,'Value');
             if isempty(Excel_data_filepath)% Check if excel filepath exists
@@ -635,6 +655,10 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                 else
                     DetectorSettings.ExcelFilepath=Excel_data_filepath;
                 end % Set filepath for excel file in detector settings
+                ZCDThresh = get(ZCDThreshold,'string');
+                if ~isempty(ZCDThresh)
+                    DetectorSettings.ZCDThreshold = ZCDThresh;
+                end
             end
             PaddingStr = get(Padding,'string');
             if ~isempty(PaddingStr)
@@ -677,7 +701,6 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                 end
                 DetectorSettings.ProcessAnnotated =1;
             elseif get(Process_Seizures,'Value')
-                Excel_data_filepath =  get(EEG_Seizure_times_data_path,'string'); % Get excel filepath from edit box
                 if isempty(Excel_data_filepath)% Check if excel filepath exists
                     set(ErrorMessage,'string','No excel filepath specified') % Set error message
                     set(ErrorMessage,'Visible','On') % Show error message
@@ -688,6 +711,10 @@ Estimate_all_data =uicontrol('style','checkbox','parent',GUIFigure,'units','norm
                     else
                         DetectorSettings.ExcelFilepath=Excel_data_filepath;
                     end % Set filepath for excel file in detector settings
+                    Duration_Data = get(Annotated_Duration,'string');
+                    if ~isempty(Duration_Data)
+                        DetectorSettings.Annotated_Duration = Duration_Data;
+                    end
                 end % Check if no options selected
                 DetectorSettings.CompareS=1;
             else
